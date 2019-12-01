@@ -10,4 +10,4 @@ with open('masses.txt') as masses:
     for l in masses.readlines():
         total_fuel += fuel_for_mass(int(l))
 
-print 'total fuel:', total_fuel
+print 'total fuel', total_fuel
