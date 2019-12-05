@@ -25,20 +25,24 @@ type Memory struct {
 
 type Mode int
 
-const Immediate = 1
-const Position = 0
+const (
+	Immediate = 1
+	Position  = 0
+)
 
 type OpCode int
 
-const Add = 1
-const Multiply = 2
-const Input = 3
-const Output = 4
-const JumpIfTrue = 5
-const JumpIfFalse = 6
-const LessThan = 7
-const Equals = 8
-const Halt = 99
+const (
+	Add         = 1
+	Multiply    = 2
+	Input       = 3
+	Output      = 4
+	JumpIfTrue  = 5
+	JumpIfFalse = 6
+	LessThan    = 7
+	Equals      = 8
+	Halt        = 99
+)
 
 func (m *Memory) read(position int, mode Mode) int {
 	switch mode {
