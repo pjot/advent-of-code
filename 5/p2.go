@@ -11,8 +11,8 @@ func parseFile(fileName string) []int {
 	data, _ := ioutil.ReadFile(fileName)
 	program := []int{}
 	for _, s := range strings.Split(string(data), ",") {
-		i, err := strconv.Atoi(strings.Trim(s, "\n"))
-		if err == nil {
+		trimmed := strings.Trim(s, "\n")
+		if i, err := strconv.Atoi(trimmed); err == nil {
 			program = append(program, i)
 		}
 	}
