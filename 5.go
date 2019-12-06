@@ -130,7 +130,10 @@ func runProgram(memory Memory, input int) int {
 
 func main() {
 	program := parseFile("program.testcode")
-	m := Memory{data: program}
-	result := runProgram(m, 1)
-	fmt.Println(result)
+	result := runProgram(Memory{data: program}, 1)
+	fmt.Println("Part 1:", result)
+
+	program2 := parseFile("program.testcode")
+	result2 := runProgram(Memory{data: program2}, 5)
+	fmt.Println("Part 2:", result2)
 }

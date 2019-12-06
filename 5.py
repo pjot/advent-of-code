@@ -91,4 +91,7 @@ def run_program(memory, program_input):
     return output
 
 program = parse_file('program.testcode')
-print run_program(Memory(program), 5)
+print "Part 1:", run_program(Memory(program), 1)
+
+program = parse_file('program.testcode')
+print "Part 2:", run_program(Memory(program), 5)
