@@ -35,7 +35,7 @@ class Machine:
     def input(self):
         return self.inputs.pop(0)
 
-    def run_program(self):
+    def run(self):
         while True:
             instruction = self.read()
             op_code, mode_a, mode_b = parse_instruction(instruction)
@@ -101,7 +101,7 @@ def run_amps(program, phases):
     while not done:
         for amp in amps:
             amp.inputs.append(value)
-            value, done = amp.run_program()
+            value, done = amp.run()
     return value
 
 def find_max(program, phases):
@@ -116,6 +116,6 @@ def find_max(program, phases):
     return max_value
 
 program = parse_file('input.amp')
-print 'Part 1:', find_max(program, [0, 1, 2, 3, 4])
 
+print 'Part 1:', find_max(program, [0, 1, 2, 3, 4])
 print 'Part 2:', find_max(program, [5, 6, 7, 8, 9])
