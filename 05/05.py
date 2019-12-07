@@ -5,6 +5,7 @@ def parse_file(filename):
         program = [int(i) for i in ints]
         return program
 
+
 def parse_instruction(instruction):
     full_instruction = '{:05d}'.format(instruction)
     return (
@@ -12,6 +13,7 @@ def parse_instruction(instruction):
         int(full_instruction[2]),
         int(full_instruction[1]),
     )
+
 
 class Memory:
     def __init__(self, memory):
@@ -26,6 +28,7 @@ class Memory:
     def write(self, position, value):
         pos = self.read(position)
         self.memory[pos] = value
+
 
 def run_program(memory, program_input):
     position = 0
@@ -90,8 +93,9 @@ def run_program(memory, program_input):
 
     return output
 
-program = parse_file('program.testcode')
-print "Part 1:", run_program(Memory(program), 1)
 
 program = parse_file('program.testcode')
-print "Part 2:", run_program(Memory(program), 5)
+print("Part 1:", run_program(Memory(program), 1))
+
+program = parse_file('program.testcode')
+print("Part 2:", run_program(Memory(program), 5))

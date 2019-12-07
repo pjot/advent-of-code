@@ -18,6 +18,7 @@ def handle_position(program, position):
 
     return program, position + 4
 
+
 def run_program(program):
     position = 0
     while position >= 0:
@@ -49,13 +50,12 @@ def run_until(answer):
             if result[0] == answer:
                 return noun, verb
 
+
 program = parse_file('program.intcode')
 program[1] = 12
 program[2] = 2
 result = run_program(program)
-
-print 'part 1:', result[0]
+print('part 1:', result[0])
 
 noun, verb = run_until(19690720)
-
-print 'part 2:', 100 * noun + verb
+print('part 2:', 100 * noun + verb)

@@ -21,14 +21,17 @@ def coords_for_path(path):
             coords.append((x, y))
     return coords
 
+
 def parse_file(file):
     with open(file) as f:
         path1 = f.readline().split(',')
         path2 = f.readline().split(',')
     return path1, path2
 
+
 def distance(x, y):
     return abs(x) + abs(y)
+
 
 def lowest_distance(coords):
     lowest = float('inf')
@@ -37,6 +40,7 @@ def lowest_distance(coords):
         if d < lowest:
             lowest = d
     return lowest
+
 
 def lowest_step(intersection, coords1, coords2):
     lowest_step = float('inf')
@@ -47,6 +51,7 @@ def lowest_step(intersection, coords1, coords2):
         lowest_step = min(steps, lowest_step)
     return lowest_step
 
+
 path1, path2 = parse_file('input.path')
 
 coords1 = coords_for_path(path1)
@@ -54,5 +59,5 @@ coords2 = coords_for_path(path2)
 
 intersections = set(coords1) & set(coords2)
 
-print 'Part 1:', lowest_distance(intersections)
-print 'Part 2:', lowest_step(intersections, coords1, coords2)
+print('Part 1:', lowest_distance(intersections))
+print('Part 2:', lowest_step(intersections, coords1, coords2))

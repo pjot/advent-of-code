@@ -21,5 +21,5 @@ with open('masses.txt') as masses:
         total_fuel += fuel_for_mass(int(l))
         partial_fuel += iterate(int(l))
 
-print 'part 1:', partial_fuel
-print 'part 2:', total_fuel
+print('part 1:', partial_fuel)
+print('part 2:', total_fuel)
