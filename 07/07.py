@@ -96,10 +96,9 @@ def run_amps(program, phases):
     done = False
     amps = [Memory(program[:], [phase]) for phase in phases]
     while not done:
-        for amp, phase in enumerate(phases):
-            memory = amps[amp]
-            memory.inputs.append(value)
-            value, done = run_program(memory)
+        for amp in amps:
+            amp.inputs.append(value)
+            value, done = run_program(amp)
     return value
 
 def find_max(program, phases):
