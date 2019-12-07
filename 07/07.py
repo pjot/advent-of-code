@@ -15,90 +15,93 @@ def parse_instruction(instruction):
         int(full_instruction[1]),
     )
 
-class Memory:
-    def __init__(self, memory, inputs):
-        self.memory = memory
+class Machine:
+    def __init__(self, program, inputs):
+        self.tape = program
         self.position = 0
         self.inputs = inputs
         self.output = None
 
     def read(self, delta=0, mode=1):
         if mode == 1:
-            return self.memory[self.position + delta]
+            return self.tape[self.position + delta]
         if mode == 0:
-            return self.memory[self.memory[self.position + delta]]
+            return self.tape[self.tape[self.position + delta]]
 
     def write(self, delta, value):
         pos = self.read(delta)
-        self.memory[pos] = value
+        self.tape[pos] = value
 
-def run_program(memory):
-    while True:
-        instruction = memory.read()
-        op_code, mode_a, mode_b = parse_instruction(instruction)
+    def input(self):
+        return self.inputs.pop(0)
 
-        if op_code == 99:
-            return memory.output, True
+    def run_program(self):
+        while True:
+            instruction = self.read()
+            op_code, mode_a, mode_b = parse_instruction(instruction)
 
-        if op_code == 1:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            memory.write(3, a + b)
-            memory.position += 4
+            if op_code == 99:
+                return self.output, True
 
-        if op_code == 2:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            memory.write(3, a * b)
-            memory.position += 4
+            if op_code == 1:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                self.write(3, a + b)
+                self.position += 4
 
-        if op_code == 3:
-            memory.write(1, memory.inputs.pop(0))
-            memory.position += 2
+            if op_code == 2:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                self.write(3, a * b)
+                self.position += 4
 
-        if op_code == 4:
-            memory.output = memory.read(1, mode_a)
-            memory.position += 2
-            return memory.output, False
+            if op_code == 3:
+                self.write(1, self.input())
+                self.position += 2
 
-        if op_code == 5:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            if a != 0:
-                memory.position = b
-            else:
-                memory.position += 3
+            if op_code == 4:
+                self.output = self.read(1, mode_a)
+                self.position += 2
+                return self.output, False
 
-        if op_code == 6:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            if a == 0:
-                memory.position = b
-            else:
-                memory.position += 3
+            if op_code == 5:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                if a != 0:
+                    self.position = b
+                else:
+                    self.position += 3
 
-        if op_code == 7:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            value = 1 if a < b else 0
-            memory.write(3, value)
-            memory.position += 4
+            if op_code == 6:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                if a == 0:
+                    self.position = b
+                else:
+                    self.position += 3
 
-        if op_code == 8:
-            a = memory.read(1, mode_a)
-            b = memory.read(2, mode_b)
-            value = 1 if a == b else 0
-            memory.write(3, value)
-            memory.position += 4
+            if op_code == 7:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                value = 1 if a < b else 0
+                self.write(3, value)
+                self.position += 4
+
+            if op_code == 8:
+                a = self.read(1, mode_a)
+                b = self.read(2, mode_b)
+                value = 1 if a == b else 0
+                self.write(3, value)
+                self.position += 4
 
 def run_amps(program, phases):
     value = 0
     done = False
-    amps = [Memory(program[:], [phase]) for phase in phases]
+    amps = [Machine(program[:], [phase]) for phase in phases]
     while not done:
         for amp in amps:
             amp.inputs.append(value)
-            value, done = run_program(amp)
+            value, done = amp.run_program()
     return value
 
 def find_max(program, phases):
