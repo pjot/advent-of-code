@@ -1,11 +1,13 @@
 from itertools import permutations
 
+
 def parse_file(filename):
     with open(filename) as f:
         code = f.readline()
         ints = code.split(',')
         program = [int(i) for i in ints]
         return program
+
 
 def parse_instruction(instruction):
     full_instruction = '{:05d}'.format(instruction)
@@ -14,6 +16,7 @@ def parse_instruction(instruction):
         int(full_instruction[2]),
         int(full_instruction[1]),
     )
+
 
 class Machine:
     def __init__(self, program, phase):
@@ -94,6 +97,7 @@ class Machine:
                 self.write(3, value)
                 self.position += 4
 
+
 def run_amps(program, phases):
     amps = [Machine(program, phase) for phase in phases]
     value = 0
@@ -104,18 +108,18 @@ def run_amps(program, phases):
             value, done = amp.run()
     return value
 
+
 def find_max(program, phases):
     max_value = 0
-    max_phase = []
     for phases in permutations(phases):
         output = run_amps(program, phases)
         if output > max_value:
             max_value = output
-            max_phase = phases
 
     return max_value
 
+
 program = parse_file('input.amp')
 
-print 'Part 1:', find_max(program, [0, 1, 2, 3, 4])
-print 'Part 2:', find_max(program, [5, 6, 7, 8, 9])
+print('Part 1:', find_max(program, [0, 1, 2, 3, 4]))
+print('Part 2:', find_max(program, [5, 6, 7, 8, 9]))
