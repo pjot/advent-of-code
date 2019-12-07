@@ -16,10 +16,10 @@ def parse_instruction(instruction):
     )
 
 class Machine:
-    def __init__(self, program, inputs):
-        self.tape = program
+    def __init__(self, program, phase):
+        self.tape = program[:]
         self.position = 0
-        self.inputs = inputs
+        self.inputs = [phase]
         self.output = None
 
     def read(self, delta=0, mode=1):
@@ -95,9 +95,9 @@ class Machine:
                 self.position += 4
 
 def run_amps(program, phases):
+    amps = [Machine(program, phase) for phase in phases]
     value = 0
     done = False
-    amps = [Machine(program[:], [phase]) for phase in phases]
     while not done:
         for amp in amps:
             amp.inputs.append(value)
