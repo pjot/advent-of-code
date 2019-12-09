@@ -48,16 +48,10 @@ const (
 )
 
 func (m *Memory) g(position int) int {
-    v, ok := m.data[position]
-    if ok {
+    if v, ok := m.data[position]; ok {
         return v
     }
     return 0
-}
-
-func (m *Memory) setBase(base int) {
-    m.base = base
-    fmt.Println("base", m.base)
 }
 
 func (m *Memory) read(position int, mode Mode) int {
