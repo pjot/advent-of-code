@@ -33,7 +33,6 @@
   (map colorize (reduce merge-layers layers)))
 
 (def size [25 6])
-
 (def layers (parse-file "image.txt" size))
 
 (println "Part 1:"
