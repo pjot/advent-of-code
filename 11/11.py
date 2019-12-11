@@ -1,3 +1,6 @@
+from functools import reduce
+
+
 def parse_file(filename):
     with open(filename) as f:
         code = f.readline()
@@ -159,24 +162,30 @@ def paint(program, initial):
     return pixels
 
 
+def min_max(coords):
+    return reduce(
+        lambda acc, c: (
+            min(c, acc[0]),
+            max(c, acc[1])
+        ),
+        coords,
+        (0, 0)
+    )
+
+
 def draw_image(pixels):
     im = {}
-    min_x = 0
-    min_y = 0
-    max_x = 0
-    max_y = 0
     for (x, y), color in pixels.items():
         im[(x, y)] = '#' if color == 1 else ' '
-        min_x = min(min_x, x)
-        max_x = max(max_x, x)
-        min_y = min(min_y, y)
-        max_y = max(max_y, y)
 
-    for y in range(max_y+1, min_y-1, -1):
-        print()
-        for x in range(max_x+1, min_x-1, -1):
+    min_x, max_x = min_max([c[0] for c in pixels.keys()])
+    min_y, max_y = min_max([c[1] for c in pixels.keys()])
+
+    for y in range(max_y, min_y - 1, -1):
+        for x in range(max_x, min_x - 1, -1):
             pixel = im.get((x, y), " ")
             print(pixel, end="")
+        print()
 
 
 program = parse_file('input.intcode')
