@@ -42,13 +42,31 @@
 (defn row->coords [r]
   (->> (map parse-direction r)
        (path->coordinates)
-       (set)))
+       (rest)))
+
+(defn position-of [coordinate]
+    (fn [wire] (.indexOf wire coordinate)))
+
+(defn distance-along [wires coordinate]
+    (reduce + 
+        (map (position-of coordinate) wires)))
+
+(def wires 
+    (->> (parse-file "input.path")
+         (map row->coords)))
+
+(def intersections 
+    (reduce sets/intersection (map set wires)))
 
 (println "Part 1:" 
-  (->> (parse-file "input.path")
-       (map row->coords)
-       (reduce sets/intersection)
-       (map distance)
-       (set)
-       (#(disj % 0))
-       (reduce min)))
+    (->> (map distance intersections)
+         (set)
+         (#(disj % 0))
+         (reduce min)))
+
+(println "Part 2:"
+    (reduce 
+        (fn [acc point]
+            (min acc (distance-along wires point)))
+        ##Inf
+        intersections))
