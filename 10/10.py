@@ -33,15 +33,16 @@ def count_asteroids(coords, asteroids):
     return len(group_by_angle(coords, asteroids))
 
 
-def find_best(asteroids):
+def find_station(asteroids):
     high = 0
-    best = (None, None)
+    station = (None, None)
     for x, y in asteroids:
         cnt = count_asteroids((x, y), asteroids)
         if cnt > high:
             high = cnt
-            best = (x, y)
-    return high, best
+            station = (x, y)
+    return high, station
+
 
 def shoot(asteroids, station, limit):
     grouped_for_station = group_by_angle(station, asteroids)
@@ -58,11 +59,10 @@ def shoot(asteroids, station, limit):
                 if dropped == limit:
                     return x, y
 
+
 asteroids = list(parse_file('input.map'))
-high, best = find_best(asteroids)
-print("Part 1:", high, best)
+high, station = find_station(asteroids)
+print("Part 1:", high, station)
 
-x, y = shoot(asteroids, best, 200)
+x, y = shoot(asteroids, station, 200)
 print("Part 2:", 100 * x + y)
-
-
