@@ -28,7 +28,7 @@ def run(tape, position, base, inputs):
         except KeyError:
             return 0
 
-    output = inputs[0]
+    output = next(inputs)
 
     def write(delta, value, mode):
         if mode == 2:
@@ -58,7 +58,7 @@ def run(tape, position, base, inputs):
             position += 4
 
         if op_code == 3:
-            write(1, inputs.pop(0), mode_a)
+            write(1, next(inputs), mode_a)
             position += 2
 
         if op_code == 4:
@@ -102,74 +102,43 @@ def run(tape, position, base, inputs):
             position += 2
 
 
-def run_program(program, input):
-    done = False
-    p = 0
-    b = 0
-    t = {m: i for m, i in enumerate(program)}
-    output = []
-    while not done:
-        t, p, o, b, done = run(t, p, b, input)
-        if not done:
-            output.append(o)
-    return t, p, b, output
-
-
-class inputter:
-    def __init__(self, v):
-        self.v = v
-
-    def __getitem__(self, position):
-        return self.v
-
-    def pop(self, position):
-        return self.v
+def inputter(v):
+    while True:
+        yield v
 
 
 def handle_turn(direction, turn):
-    d = {
-        'up': 0,
-        'left': 1,
-        'down': 2,
-        'right': 3,
-    }
-    t = {
-        1: 1,
-        0: -1,
-    }
-    new = d[direction] + t[turn]
-
-    d_reversed = {
-        v: k for k, v in d.items()
-    }
-    new_direction = d_reversed[new % 4]
-
+    new = (direction + (turn * 2) - 1) % 4
     deltas = {
-        'up': (0, 1),
-        'left': (-1, 0),
-        'down': (0, -1),
-        'right': (1, 0),
+        0: (0, 1),
+        1: (-1, 0),
+        2: (0, -1),
+        3: (1, 0),
     }
-    return new_direction, deltas[new_direction]
+    return new, deltas[new]
 
 
 def add_points(a, b):
     return a[0] + b[0], a[1] + b[1]
 
 
+def one_iteration(t, p, b, i):
+    t, p, color, b, done = run(t, p, b, inputter(i))
+    t, p, turn, b, done = run(t, p, b, inputter(i))
+
+    return t, p, b, turn, color, done
+
+
 def paint(program, initial):
     pixels = {}
     current = (0, 0)
     pixels[current] = initial
-    direction = 'up'
+    direction = 0
 
     t = {m: i for m, i in enumerate(program)}
 
-    t, p, color, b, done = run(
-        t, 0, 0, inputter(pixels.get(current, 0))
-    )
-    t, p, turn, b, done = run(
-        t, p, b, inputter(pixels.get(current, 0))
+    t, p, b, turn, color, _ = one_iteration(
+        t, 0, 0, pixels.get(current, 0)
     )
 
     pixels[current] = color
@@ -177,11 +146,8 @@ def paint(program, initial):
     current = add_points(current, (dx, dy))
 
     while True:
-        t, p, color, b, done = run(
-            t, p, b, inputter(pixels.get(current, 0))
-        )
-        t, p, turn, b, done = run(
-            t, p, b, inputter(pixels.get(current, 0))
+        t, p, b, turn, color, done = one_iteration(
+            t, p, b, pixels.get(current, 0)
         )
 
         pixels[current] = color
