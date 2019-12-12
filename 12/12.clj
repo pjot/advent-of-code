@@ -75,9 +75,34 @@
             (calculate-energies positions)
             (calculate-energies velocities))))
 
+(defn gcd [a b]
+    (if (zero? b) a
+        (recur b (mod a b))))
+
+(defn lcm
+    ([a b]
+        (/ (* a b)
+           (gcd a b)))
+    ([a b c]
+        (lcm (lcm a b) c)))
+
+(defn period-for [positions velocities]
+    (loop [n 0 [p v] [positions velocities]]
+        (if (and (= p positions)
+                 (= v velocities)
+                 (not= n 0))
+            n
+            (recur (inc n) (next-state [p v])))))
+
 (def steps 1000)
-(println
+(println "Part 1:"
     (let [[x u] (state-at steps [initial-x initial-u])
           [y v] (state-at steps [initial-y initial-v])
           [z w] (state-at steps [initial-z initial-w])]
         (total-energy [x y z] [u v w])))
+
+(println "Part 2:"
+    (lcm 
+        (period-for initial-x initial-v)
+        (period-for initial-y initial-u)
+        (period-for initial-z initial-w)))
