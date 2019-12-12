@@ -1,11 +1,5 @@
 (ns dec12)
 
-(comment
-(def initial-x [-1 2 4 3])
-(def initial-y [0 -10 -8 5])
-(def initial-z [2 -7 8 -1])
-)
-
 (def initial-x [17 1 6 19])
 (def initial-y [-7 4 -2 11])
 (def initial-z [-11 -1 -6 9])
