@@ -1,3 +1,7 @@
+import os
+import sys
+
+
 def parse_file(filename):
     with open(filename) as f:
         code = f.readline()
@@ -102,29 +106,64 @@ def run(tape, position, base, next_input):
             position += 2
 
 
-def run_to_output(program):
-    output = []
-    t = {i: v for i, v in enumerate(program)}
-    p = 0
-    b = 0
-    done = False
+def wait_key():
+    ''' Wait for a key press on the console and return it. '''
+    result = None
+    if os.name == 'nt':
+        import msvcrt
+        result = msvcrt.getch()
+    else:
+        import termios
+        fd = sys.stdin.fileno()
 
-    while not done:
-        t, p, o, b, done = run(
-            t, p, b, lambda: 0
-        )
-        if not done:
-            output.append(o)
+        oldterm = termios.tcgetattr(fd)
+        newattr = termios.tcgetattr(fd)
+        newattr[3] = newattr[3] & ~termios.ICANON & ~termios.ECHO
+        termios.tcsetattr(fd, termios.TCSANOW, newattr)
 
-    return output
+        try:
+            result = sys.stdin.read(1)
+        except IOError:
+            pass
+        finally:
+            termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
+
+    return result
 
 
-def joystick(pad, ball):
-    if pad > ball:
-        return -1
-    if ball > pad:
-        return 1
-    return 0
+def read_input():
+    print('a, s, d')
+    i = wait_key()
+    if i == 'a':
+        r = -1
+    elif i == 'd':
+        r = 1
+    else:
+        r = 0
+    return r
+
+
+def char(p):
+    if p == 0:
+        return ' '
+    if p == 1:
+        return 'W'
+    if p == 2:
+        return '#'
+    if p == 3:
+        return '='
+    if p == 4:
+        return 'O'
+
+
+def draw_pixels(pixels):
+    for y in range(0, 23):
+        for x in range(0, 45):
+            pixel = pixels.get((x, y), 0)
+
+            print(char(pixel), end="")
+        print()
+    print('Score: ', pixels.get((-1, 0), 0))
 
 
 def run_with_screen(program):
@@ -132,38 +171,22 @@ def run_with_screen(program):
     t = {i: v for i, v in enumerate(program)}
     p = 0
     b = 0
-    pad = 0
-    ball = 0
     done = False
 
     while not done:
         t, p, x, b, done = run(
-            t, p, b, lambda: joystick(pad, ball)
+            t, p, b, read_input
         )
         t, p, y, b, done = run(
-            t, p, b, lambda: joystick(pad, ball)
+            t, p, b, read_input
         )
         t, p, tile, b, done = run(
-            t, p, b, lambda: joystick(pad, ball)
+            t, p, b, read_input
         )
-        if tile == 4:
-            ball = x
-        if tile == 3:
-            pad = x
-
         pixels[(x, y)] = tile
-        if done:
-            return pixels.get((-1, 0), 0)
+        draw_pixels(pixels)
 
 
 program = parse_file('game.intcode')
-outputs = run_to_output(program)
-blocks = 0
-for i, v in enumerate(outputs):
-    if (i + 1) % 3 == 0:
-        if v == 2:
-            blocks += 1
-print("Part 1:", blocks)
-
 program[0] = 2
-print("Part 2:", run_with_screen(program))
+run_with_screen(program)
