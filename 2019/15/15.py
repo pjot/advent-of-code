@@ -67,6 +67,7 @@ def build_grid(program):
 
                     if value != 0:
                         new_horizon.append((point, this_steps))
+
         horizon = new_horizon
 
     draw_map(grid)
@@ -80,17 +81,20 @@ def bfs(grid, start, end=None):
     while horizon:
         new_horizon = []
         for p in horizon:
-            for _, np in neighbours(p):
-                if grid.get(np, 1) == 0:
+            for _, point in neighbours(p):
+                if grid.get(point, 1) == 0:
                     continue
 
-                if end is not None and np == end:
+                if end is not None and point == end:
                     return distance + 1
 
-                if np not in visited:
-                    new_horizon.append(np)
+                if point not in visited:
+                    new_horizon.append(point)
 
-                visited.add(np)
+                visited.add(point)
+                grid[point] = 2
+                system('clear')
+                draw_map(grid)
 
         horizon = new_horizon
         distance += 1
@@ -99,5 +103,7 @@ def bfs(grid, start, end=None):
 
 
 oxygen, grid = build_grid(parse_file("input.intcode"))
-print('Part 1:', bfs(grid, (0, 0), oxygen))
-print('Part 2:', bfs(grid, oxygen) - 1)
+one = bfs(grid, (0, 0), oxygen)
+two = bfs(grid, oxygen) - 1
+print('Part 1:', one)
+print('Part 2:', two)
