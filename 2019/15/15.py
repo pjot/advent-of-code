@@ -84,7 +84,6 @@ def bfs(grid, start, end=None):
                     new_horizon.append(point)
 
                 visited.add(point)
-                grid[point] = 2
 
         horizon = new_horizon
         distance += 1
