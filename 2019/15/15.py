@@ -1,5 +1,6 @@
 from intcode import Computer, parse_file
 import random
+from os import system
 
 
 def walk(point):
@@ -17,8 +18,8 @@ def neighbours(point):
 
 
 def draw_map(map):
-    for y in range(-25, 25):
-        for x in range(-25, 25):
+    for y in range(-21, 22):
+        for x in range(-21, 21):
             c = map.get((x, y), -1)
             if c == 0:
                 c = '#'
@@ -34,71 +35,69 @@ def draw_map(map):
         print()
 
 
-program = parse_file('input.intcode')
-computer = Computer(program)
-current = (0, 0)
-oxygen = None
-map = {current: 1}
-for i in range(1500000):
-    direction, point = walk(current)
-    if map.get(point) == 0:
-        continue
+def build_grid(program):
+    def next_point(steps):
+        computer = Computer(program)
+        for step in steps:
+            computer.next_input = lambda: step
+            computer.iterate()
+        return computer.output
 
-    computer.next_input = lambda: direction
-    computer.iterate()
-    if computer.output == 0:
-        map[point] = computer.output
-    if computer.output == 1:
-        current = point
-        map[current] = computer.output
-    if computer.output == 2:
-        current = point
-        oxygen = point
-        map[current] = computer.output
+    program = parse_file('input.intcode')
+    oxygen = None
+
+    current = (0, 0)
+    grid = {current: 1}
+    horizon = [(current, [])]
+    while horizon:
+        system('clear')
+        draw_map(grid)
+        new_horizon = []
+        for p, steps in horizon:
+            for direction, point in neighbours(p):
+                this_steps = steps + [direction]
+                if point in grid:
+                    continue
+                else:
+                    value = next_point(this_steps)
+                    grid[point] = value
+
+                    if value == 2:
+                        oxygen = point
+
+                    if value != 0:
+                        new_horizon.append((point, this_steps))
+        horizon = new_horizon
+
+    draw_map(grid)
+    return oxygen, grid
 
 
-def bfs(graph, start, end=None):
-    seen = set()
-    dist = 0
+def bfs(grid, start, end=None):
+    visited = set()
+    distance = 0
     horizon = [start]
     while horizon:
         new_horizon = []
         for p in horizon:
             for _, np in neighbours(p):
-                if graph.get(np, 1) == 0:
+                if grid.get(np, 1) == 0:
                     continue
 
                 if end is not None and np == end:
-                    return dist + 1
+                    return distance + 1
 
-                if np not in seen:
+                if np not in visited:
                     new_horizon.append(np)
 
-                seen.add(np)
+                visited.add(np)
 
         horizon = new_horizon
-        dist += 1
+        distance += 1
 
-    return dist
+    return distance
 
 
-print('Oxygen at', oxygen)
-for y in range(-25, 25):
-    for x in range(-25, 25):
-        c = map.get((x, y), -1)
-        if c == 0:
-            c = '#'
-        elif c == 1:
-            c = ' '
-        elif c == 2:
-            c = 'O'
-        else:
-            c = ' '
-        if x == 0 and y == 0:
-            c = 'S'
-        print(c, end='')
-    print()
-        
-
-print('Part 1:', bfs(map, (0, 0), oxygen))
-print('Part 2:', bfs(map, oxygen) - 1)
+oxygen, grid = build_grid(parse_file("input.intcode"))
+print('Part 1:', bfs(grid, (0, 0), oxygen))
+print('Part 2:', bfs(grid, oxygen) - 1)
