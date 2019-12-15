@@ -1,10 +1,4 @@
 from intcode import Computer, parse_file
-import random
-from os import system
-
-
-def walk(point):
-    return random.choice(neighbours(point))
 
 
 def neighbours(point):
@@ -17,61 +11,59 @@ def neighbours(point):
     ]
 
 
-def draw_map(map):
-    for y in range(-21, 22):
-        for x in range(-21, 21):
-            c = map.get((x, y), -1)
-            if c == 0:
-                c = '#'
-            elif c == 1:
-                c = '.'
-            elif c == 2:
-                c = 'O'
-            else:
-                c = ' '
-            if x == 0 and y == 0:
-                c = 'S'
-            print(c, end='')
-        print()
+def next_point(point, direction):
+    x, y = point
+    ds = {
+        4: (x + 1, y),
+        3: (x - 1, y),
+        1: (x, y + 1),
+        2: (x, y - 1),
+    }
+    return ds[direction]
+
+
+def turn_right(d):
+    if d == 1:
+        return 4
+    if d == 2:
+        return 3
+    if d == 3:
+        return 1
+    if d == 4:
+        return 2
+
+
+def turn_left(d):
+    return turn_right(
+        turn_right(
+            turn_right(d)
+        )
+    )
 
 
 def build_grid(program):
-    def next_point(steps):
-        computer = Computer(program)
-        for step in steps:
-            computer.next_input = lambda: step
-            computer.iterate()
-        return computer.output
-
-    program = parse_file('input.intcode')
-    oxygen = None
+    computer = Computer(program)
 
     current = (0, 0)
     grid = {current: 1}
-    horizon = [(current, [])]
-    while horizon:
-        system('clear')
-        draw_map(grid)
-        new_horizon = []
-        for p, steps in horizon:
-            for direction, point in neighbours(p):
-                this_steps = steps + [direction]
-                if point in grid:
-                    continue
-                else:
-                    value = next_point(this_steps)
-                    grid[point] = value
+    direction = 4
 
-                    if value == 2:
-                        oxygen = point
+    while True:
+        next = next_point(current, direction)
+        output = computer.run_with_input(direction)
+        grid[next] = output
 
-                    if value != 0:
-                        new_horizon.append((point, this_steps))
+        if output == 0:
+            direction = turn_left(direction)
 
-        horizon = new_horizon
+        if output in [1, 2]:
+            direction = turn_right(direction)
+            current = next
 
-    draw_map(grid)
-    return oxygen, grid
+        if current == (0, 0) and direction == 4:
+            break
+
+    return grid
 
 
 def bfs(grid, start, end=None):
@@ -93,8 +85,6 @@ def bfs(grid, start, end=None):
 
                 visited.add(point)
                 grid[point] = 2
-                system('clear')
-                draw_map(grid)
 
         horizon = new_horizon
         distance += 1
@@ -102,7 +92,12 @@ def bfs(grid, start, end=None):
     return distance
 
 
-oxygen, grid = build_grid(parse_file("input.intcode"))
+grid = build_grid(parse_file("input.intcode"))
+for k, v in grid.items():
+    if v == 2:
+        oxygen = k
+        break
+
 one = bfs(grid, (0, 0), oxygen)
 two = bfs(grid, oxygen) - 1
 print('Part 1:', one)

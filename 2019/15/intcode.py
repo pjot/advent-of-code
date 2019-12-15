@@ -24,13 +24,10 @@ class Computer:
         self.tape = {k: v for k, v in enumerate(program)}
         self.output = 0
 
-    def clone(self):
-        c = Computer([], self.next_input)
-        c.base = self.base
-        c.position = self.position
-        c.tape = self.tape
-        c.output = self.output
-        return c
+    def run_with_input(self, input):
+        self.next_input = lambda: input
+        self.iterate()
+        return self.output
 
     def run_to_output(self):
         done = False
