@@ -5,7 +5,7 @@ def split(n):
     return [int(d) for d in str(n)]
 
 
-def apply_phase(numbers, phase):
+def apply_phase_full(numbers, phase):
     multipliers = (
         [0] * phase +
         [1] * phase +
@@ -31,32 +31,36 @@ def apply_phase(numbers, phase):
     return r
 
 
-inp = split(
-    '597680928399277585651912986252151063' +
-    '718901180514262508559247641944115280' +
-    '0471870988640290343556962798248530192' +
-    '16492408200598271610246316122900051063' +
-    '04724846680415690183371469037418126383450370741078684974598662642' +
-    '9567940128252714873292435831175378735653321667441288450068068787179559465341588373704519359197'+
-    '90469815143341599820016469368684893122766857261426799636559525003877090579845725676481276977781270627558901433501'+
-    '565337409716858949203430181103278194428546385063911239478804717744977998841434061688000383456176494210691861957243370'+
-    '245170223862304663932874454624234226361642678259020094801774825694423060700312504286475305674864442250709029812379')
+def apply_phase(numbers, phase):
+    r = []
+    s = 0
+    l = len(numbers)
+    for i, n in enumerate(reversed(numbers)):
+        if i > l / 2:
+            r.append(0)
+        else:
+            s += n
+            r.append(s % 10)
 
-n = split('03036732577212944063491565474664')
-m_len = len(n)
-offset = int("".join(str(i) for i in n[:7]))
-needed = 10000 * m_len - offset
-mult = ceil(needed / m_len)
-#print(needed, needed / m_len, mult)
-#real_o = 
-n = n * mult
-#print("".join(str(i) for i in n))
+    r = list(reversed(r))
+    return r
+
+
+with open('input.txt') as f:
+    input_number = split(f.readline().strip())
+
+n1 = input_number
+
+offset = int("".join(str(i) for i in n1[:7]))
+n2 = input_number * 10000
+
+for i in range(1, 101):
+    n1 = apply_phase_full(n1, i)
+
+print("Part 1:", ''.join(str(i) for i in n1[:8]))
+
 for i in range(1, 101):
     print(i)
-    n = apply_phase(n, i)
-    #print(n)
+    n2 = apply_phase(n2, i)
 
-#print("".join(str(i) for i in n))
-print(n[needed:8])
-
-#print(n[offset:8])
+print("Part 2:", ''.join(str(i) for i in n2[offset:offset+8]))
