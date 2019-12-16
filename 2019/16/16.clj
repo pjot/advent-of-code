@@ -1,13 +1,21 @@
 (ns dec16
   (:require [clojure.string :as string]))
 
-(defn parse-file [f]
-  (->> (string/split
-        (->> (slurp f)
-             (string/split-lines)
-             (first)) #"")
-       (map #(Integer/parseInt %))
-       (vec)))
+(defn parse-offset [f]
+  (as-> (slurp f) $
+    (string/split-lines $)
+    (first $)
+    (subs $ 0 7)
+    (Integer/parseInt $)))
+
+(defn parse-file [f repeats]
+  (as-> (slurp f) $
+    (string/split-lines $)
+    (first $)
+    (apply str (seq (repeat repeats $)))
+    (string/split $ #"")
+    (map #(Integer/parseInt %) $)
+    (vec $)))
 
 (defn multipliers-for-phase-implementation [phase]
   (vec
@@ -39,17 +47,54 @@
     #(sum-for-multipliers numbers (multipliers-for-phase (inc %)))
     (range (count numbers)))))
 
-(defn apply-multiple-phases [numbers i]
-  (if (pos? i)
-    (recur (apply-phase numbers) (dec i))
-    numbers))
+(defn build-phase [acc curr]
+  (conj acc (+ (last acc) curr)))
+
+(defn apply-phase-fast [numbers]
+  (->> (reverse numbers)
+       (reduce build-phase [0])
+       (rest)
+       (reverse)
+       (map #(mod % 10))
+       (vec)))
 
 (defn first-8 [numbers]
   (string/join
    (map str (take 8 numbers))))
 
-(println "Part 1:"
-         (first-8
-          (apply-multiple-phases
-           (parse-file "input.txt")
-           100)))
+(comment
+  (println "Part 1:"
+           (->> (parse-file "input.txt" 1)
+                (iterate apply-phase)
+                (take 101)
+                (last)
+                (first-8))))
+
+(def offset (parse-offset "small.txt"))
+
+(println
+ (->> (parse-file "small.txt" 100)
+      (iterate apply-phase-fast)
+      (take 101)
+      (last)
+      (reverse)
+      (first-8)))
+
+(comment
+  (println "Part 2:"
+           (subs
+            (string/join
+             (->> (parse-file "small.txt" 100)
+                  (iterate apply-phase-fast)
+                  (take 101)
+                  (last)
+                  (map str)))
+            (parse-offset "small.txt")
+            (+ 8 (parse-offset "small.txt")))))
+
+;(println offset)
+;(println "Part 1:"
+;         (first-8
+;          (apply-multiple-phases
+;           (parse-file "input.txt")
+;           100)))
