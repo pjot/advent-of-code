@@ -27,12 +27,11 @@
     (* n (get-mod multipliers (inc i) cnt))))
 
 (defn sum-for-multipliers [numbers multipliers cnt]
-  (mod
-    (Math/abs
-      (reduce
-        +
-        (map-indexed (multiply-by-multipliers multipliers cnt) numbers)))
-    10))
+  (as-> (multiply-by-multipliers multipliers cnt) $
+        (map-indexed $ numbers)
+        (reduce + $)
+        (Math/abs $)
+        (mod $ 10)))
 
 (defn apply-phase [numbers]
   (vec
