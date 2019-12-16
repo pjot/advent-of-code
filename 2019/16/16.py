@@ -46,21 +46,26 @@ def apply_phase(numbers, phase):
     return r
 
 
+def part_one(n):
+    for i in range(1, 101):
+        n = apply_phase_full(n, i)
+
+    return ''.join(str(i) for i in n[:8])
+
+
+def part_two(n):
+    offset = int("".join(str(i) for i in n[:7]))
+
+    n = n * 10000
+
+    for i in range(1, 101):
+        n = apply_phase(n, i)
+
+    return ''.join(str(i) for i in n[offset:offset+8])
+
+
 with open('input.txt') as f:
     input_number = split(f.readline().strip())
 
-n1 = input_number
-
-offset = int("".join(str(i) for i in n1[:7]))
-n2 = input_number * 10000
-
-for i in range(1, 101):
-    n1 = apply_phase_full(n1, i)
-
-print("Part 1:", ''.join(str(i) for i in n1[:8]))
-
-for i in range(1, 101):
-    print(i)
-    n2 = apply_phase(n2, i)
-
-print("Part 2:", ''.join(str(i) for i in n2[offset:offset+8]))
+print("Part 1:", part_one(input_number))
+print("Part 2:", part_two(input_number))
