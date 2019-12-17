@@ -16,7 +16,6 @@ for o in outputs:
         if c in ['v', '<', '>', '^']:
             robot = (x, y)
         x += 1
-    print(c, end='')
 
 
 def neighbours(point):
@@ -98,20 +97,38 @@ def get_path(robot, grid):
                 steps = 0
                 found_turn = True
                 continue
+
         if not found_turn:
+            path.append(steps)
             return path
 
 
 path = get_path(robot, grid)
 p = ','.join(str(s) for s in path)
-p = p.replace('L,8,R,10,L,10,L,4,L,6,L,8,L,8,R', 'A')
-print(','.join([str(s) for s in path]))
-print(p)
-
-print(len(path))
-
+print('Path:', p)
 
 program = parse_file("input.intcode")
 program[0] = 2
 computer = Computer(program)
 
+with open('robot_path.txt') as f:
+    inputs = []
+    for line in f.readlines():
+        for c in line:
+            inputs.append(ord(c))
+
+class inputter:
+    def __init__(self, inputs):
+        self.inputs = inputs
+
+    def next(self):
+        n = self.inputs.pop(0)
+        return n
+
+inp = inputter(inputs)
+computer.next_input = inp.next
+done = False
+while not done:
+    done = computer.iterate()
+
+print("Part 2:", computer.output)
