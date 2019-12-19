@@ -19,10 +19,6 @@ func parseFile(fileName string) []int {
 	return program
 }
 
-type Memory struct {
-	data map[int]int
-    base int
-}
 
 type Mode int
 
@@ -47,33 +43,55 @@ const (
 	Halt        = 99
 )
 
-func (m *Memory) g(position int) int {
-    if v, ok := m.data[position]; ok {
+type Computer struct {
+    memory map[int]int
+    base int
+    position int
+    output int
+    nextInput func() int
+}
+
+func NewComputer(program []int) Computer {
+    memory := make(map[int]int)
+    for i, val := range program {
+        memory[i] = val
+    }
+    return Computer{
+        base: 0,
+        position: 0,
+        output: 0,
+        nextInput: func () int { return 0 },
+        memory: memory,
+    }
+}
+
+func (c *Computer) g(position int) int {
+    if v, ok := c.memory[position]; ok {
         return v
     }
     return 0
 }
 
-func (m *Memory) read(position int, mode Mode) int {
+func (c *Computer) read(position int, mode Mode) int {
 	switch mode {
 	case Immediate:
-		return m.g(position)
+		return c.g(position)
 	case Position:
-		return m.g(m.g(position))
+		return c.g(c.g(position))
     case Relative:
-        return m.g(m.base + m.g(position))
+        return c.g(c.base + c.g(position))
 	}
 	return 0
 }
 
-func (m *Memory) write(position int, value int, mode Mode) {
+func (c *Computer) write(position int, value int, mode Mode) {
 	switch mode {
 	case Immediate:
-		m.data[position] = value
+		c.memory[position] = value
 	case Position:
-		m.data[m.g(position)] = value
+		c.memory[c.g(position)] = value
     case Relative:
-        m.data[m.base + m.g(position)] = value
+        c.memory[c.base + c.g(position)] = value
 	}
 }
 
@@ -85,87 +103,82 @@ func parseInstruction(instruction int) (OpCode, Mode, Mode, Mode) {
 	return opCode, modeA, modeB, modeC
 }
 
-func runProgram(memory Memory, input int) []int {
-	position := 0
-	output := []int{}
-
+func (c *Computer) iterate() bool {
 	for {
-		instruction := memory.read(position, Immediate)
+		instruction := c.read(c.position, Immediate)
 		opCode, modeA, modeB, modeC := parseInstruction(instruction)
 
 		switch opCode {
 		case Halt:
-			return output
+			return true
 		case Add:
-			a := memory.read(position+1, modeA)
-			b := memory.read(position+2, modeB)
-			memory.write(position+3, a+b, modeC)
-			position += 4
+			a := c.read(c.position+1, modeA)
+			b := c.read(c.position+2, modeB)
+			c.write(c.position+3, a+b, modeC)
+			c.position += 4
 		case Multiply:
-			a := memory.read(position+1, modeA)
-			b := memory.read(position+2, modeB)
-			memory.write(position+3, a*b, modeC)
-			position += 4
+			a := c.read(c.position+1, modeA)
+			b := c.read(c.position+2, modeB)
+			c.write(c.position+3, a*b, modeC)
+			c.position += 4
 		case Input:
-			memory.write(position+1, input, modeA)
-			position += 2
+			c.write(c.position+1, c.nextInput(), modeA)
+			c.position += 2
 		case Output:
-			output = append(output, memory.read(position+1, modeA))
-			position += 2
+			c.output = c.read(c.position+1, modeA)
+			c.position += 2
+            return false
 		case JumpIfTrue:
-			a := memory.read(position+1, modeA)
+			a := c.read(c.position+1, modeA)
 			if a != 0 {
-				position = memory.read(position+2, modeB)
+				c.position = c.read(c.position+2, modeB)
 			} else {
-				position += 3
+				c.position += 3
 			}
 		case JumpIfFalse:
-			a := memory.read(position+1, modeA)
+			a := c.read(c.position+1, modeA)
 			if a == 0 {
-				position = memory.read(position+2, modeB)
+				c.position = c.read(c.position+2, modeB)
 			} else {
-				position += 3
+				c.position += 3
 			}
 		case LessThan:
-			a := memory.read(position+1, modeA)
-			b := memory.read(position+2, modeB)
+			a := c.read(c.position+1, modeA)
+			b := c.read(c.position+2, modeB)
 			if a < b {
-				memory.write(position+3, 1, modeC)
+				c.write(c.position+3, 1, modeC)
 			} else {
-				memory.write(position+3, 0, modeC)
+				c.write(c.position+3, 0, modeC)
 			}
-			position += 4
+			c.position += 4
 		case Equals:
-			a := memory.read(position+1, modeA)
-			b := memory.read(position+2, modeB)
+			a := c.read(c.position+1, modeA)
+			b := c.read(c.position+2, modeB)
 			if a == b {
-				memory.write(position+3, 1, modeC)
+				c.write(c.position+3, 1, modeC)
 			} else {
-				memory.write(position+3, 0, modeC)
+				c.write(c.position+3, 0, modeC)
 			}
-			position += 4
+			c.position += 4
         case SetBase:
-            a := memory.read(position+1, modeA)
-            memory.base += a
-            position += 2
+            a := c.read(c.position+1, modeA)
+            c.base += a
+            c.position += 2
 		}
 	}
 }
 
-func parse (p []int) map[int]int {
-    o := make(map[int]int)
-    for i, val := range p {
-        o[i] = val
-    }
-    return o
-}
 
 func main() {
 	program := parseFile("input.intcode")
-    result := runProgram(Memory{data: parse(program)}, 1)
-	fmt.Println("Part 1:", result)
 
-	program2 := parseFile("input.intcode")
-	result2 := runProgram(Memory{data: parse(program2)}, 2)
-	fmt.Println("Part 2:", result2)
+    computer := NewComputer(program)
+    computer.nextInput = func () int { return 1 }
+    computer.iterate()
+	fmt.Println("Part 1:", computer.output)
+
+    computer = NewComputer(program)
+    computer.nextInput = func () int { return 2 }
+    computer.iterate()
+	fmt.Println("Part 2:", computer.output)
 }
