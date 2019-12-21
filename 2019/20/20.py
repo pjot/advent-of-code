@@ -1,5 +1,4 @@
 from collections import defaultdict
-from time import sleep
 
 
 def parse_file(file):
@@ -15,13 +14,7 @@ def parse_file(file):
                 x += 1
             y += 1
 
-    return grid
-
-
-def start(grid):
-    for coords, v in grid.items():
-        if v == 'A':
-            return coords
+    return grid, x, y
 
 
 def neighbours(point):
@@ -34,60 +27,67 @@ def neighbours(point):
     ]
 
 
+def inner(point, w, h):
+    x, y = point
+    return 4 < x < w - 4 and 4 < y < h - 4
+
+
 def teleports_in(grid):
-    teleports = defaultdict(set)
+    teleports = defaultdict(list)
     for coords, v in grid.items():
         if v not in ['A', 'Z', ' ', '.', '#']:
-            teleports[v].add(coords)
-    return teleports
+            teleports[v].append(coords)
+
+    out = {}
+    for t in teleports.values():
+        assert len(t) == 2, t
+        out[t[0]] = t[1]
+        out[t[1]] = t[0]
+
+    return out
 
 
-def explore(start, goal, grid):
+def explore(start, goal, grid, w, h, recurse=False):
     visited = set()
     horizon = [start]
-    distance = -1
-    teleports = teleports_in(grid)
+    distance = 0
+    portals = teleports_in(grid)
     while horizon:
-        #draw(grid, visited, horizon, distance)
-        #sleep(0.1)
         new_horizon = []
         distance += 1
-        for p in horizon:
-            if grid.get(p) == goal:
-                return distance
-            visited.add(p)
-            for n in neighbours(p):
-                if n in visited:
+        for point in horizon:
+            x, y, level = point
+            visited.add(point)
+            for n in neighbours((x, y)):
+                if (*n, level) in visited:
                     continue
-                v = grid.get(n, '#')
-                if v in ['#', ' ']:
+                if n not in grid:
                     continue
-                if v in teleports:
-                    for tp in teleports[v]:
-                        if tp != n:
-                            new_horizon.append(tp)
-                new_horizon.append(n)
+                if grid[n] == 'Z' and level == 0:
+                    return distance
+                if grid[n] == '.':
+                    new_horizon.append((*n, level))
+                if n in portals:
+                    if recurse:
+                        delta = 1 if inner(n, w, h) else -1
+                    else:
+                        delta = 0
+                    if 0 <= level + delta < 100:
+                        new_horizon.append((*portals[n], level + delta))
         horizon = new_horizon
     return distance
 
 
-def draw(grid, visited, horizon, distance):
-    for y in range(102):
-        print()
-        for x in range(108):
-            if (x, y) in horizon:
-                print('O', end='')
-                continue
-            if (x, y) in visited:
-                print('X', end='')
-                continue
-            c = grid.get((x, y), ' ')
-            print(c, end='')
-    print()
-    print(distance)
+def find(start, end, recurse):
+    grid, width, height = parse_file('input.map')
+    for coords, v in grid.items():
+        if v == start:
+            current = (*coords, 0)
+
+    return explore(
+        current, end, grid, width, height, recurse
+    )
 
 
-g = parse_file('input.map')
-current = start(g)
-
-print(explore(current, 'Z', g))
+print("Part 1:", find('A', 'Z', recurse=False))
+print("Part 2:", find('A', 'Z', recurse=True))
