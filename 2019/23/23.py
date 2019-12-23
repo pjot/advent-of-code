@@ -11,7 +11,10 @@ def run():
     first_y = None
 
     while True:
-        empty_outputs = all([c.output is None for c in network.values()])
+        empty_outputs = all(
+            c.output is None
+            for c in network.values()
+        )
 
         if empty_outputs and nat:
             network[0].inputs += nat
