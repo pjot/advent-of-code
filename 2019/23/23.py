@@ -14,7 +14,7 @@ def run():
         empty_outputs = all([c.output is None for c in network.values()])
 
         if empty_outputs and nat:
-            network[0].inputs += list(nat)
+            network[0].inputs += nat
 
         for _, c in network.items():
             c.output = None
@@ -28,7 +28,7 @@ def run():
                     first_y = y
                 if nat and nat[1] == y:
                     return first_y, y
-                nat = x, y
+                nat = [x, y]
             elif addr is None:
                 c.inputs.append(-1)
             else:
