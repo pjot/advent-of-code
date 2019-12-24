@@ -10,15 +10,7 @@ def parse_file(file):
     return grid
 
 
-def draw(grid):
-    for y in range(5):
-        for x in range(5):
-            print(grid[x, y], end='')
-        print()
-    print()
-
-
-def neighbours(point):
+def neighbours(point, recurse=False):
     x, y = point
     ns = {
         (x + 1, y, 0),
@@ -26,6 +18,8 @@ def neighbours(point):
         (x, y + 1, 0),
         (x, y - 1, 0),
     }
+    if not recurse:
+        return ns
     ns.discard((2, 2, 0))
     if x == 0:
         ns.add((1, 2, 1))
@@ -49,8 +43,36 @@ def neighbours(point):
             ns.add((x, 4, -1))
     return ns
 
+def hash(grid):
+    points = []
+    for x in range(5):
+        for y in range(5):
+            points.append(grid[x, y])
+    return ''.join(points)
 
-def iterate(grids):
+
+def new_value(value, bugs):
+    if value == '.' and bugs in [1, 2]:
+        return '#'
+
+    if value == '#' and bugs == 1:
+        return '#'
+
+    return '.'
+
+
+def iterate_single(grid):
+    new = {}
+    for point, value in grid.items():
+        bugs = sum(
+            1 for x, y, _ in neighbours(point)
+            if grid.get((x, y), '.') == '#'
+        )
+        new[point] = new_value(value, bugs)
+    return new
+
+
+def iterate_multiple(grids):
     new = defaultdict(dict)
     for level, grid in grids.items():
         for point, value in grid.items():
@@ -58,21 +80,32 @@ def iterate(grids):
                 new[level][point] = '?'
                 continue
             bugs = sum(
-                1 for x, y, n_level in neighbours(point)
+                1 for x, y, n_level in neighbours(point, True)
                 if grids.get(level + n_level, {}).get((x, y), '.') == '#'
             )
-            if value == '.':
-                if bugs in [1, 2]:
-                    new[level][point] = '#'
-                else:
-                    new[level][point] = '.'
-
-            if value == '#':
-                if bugs == 1:
-                    new[level][point] = '#'
-                else:
-                    new[level][point] = '.'
+            new[level][point] = new_value(value, bugs)
     return new
+
+
+def first_repeating(grid):
+    seen = set()
+    while True:
+        grid = iterate_single(grid)
+        h = hash(grid)
+        if h in seen:
+            return grid
+        seen.add(h)
+
+
+def biodiversity(grid):
+    multiplier = 1
+    value = 0
+    for y in range(5):
+        for x in range(5):
+            if grid[x, y] == '#':
+                value += multiplier
+            multiplier *= 2
+    return value
 
 
 def count_bugs(grids):
@@ -84,13 +117,24 @@ def count_bugs(grids):
     return bugs
 
 
-grid = parse_file('input2.map')
-grids = {}
-for level in range(-200, 201):
-    grids[level] = {point: '.' for point in grid.keys()}
-grids[0] = grid
+def part_one():
+    grid = parse_file('input.map')
+    grid = first_repeating(grid)
+    return biodiversity(grid)
 
-for i in range(200):
-    grids = iterate(grids)
 
-print("Part 2:", count_bugs(grids))
+def part_two():
+    grid = parse_file('input2.map')
+    grids = {}
+    for level in range(-200, 201):
+        grids[level] = {point: '.' for point in grid.keys()}
+    grids[0] = grid
+
+    for i in range(200):
+        grids = iterate_multiple(grids)
+
+    return count_bugs(grids)
+
+
+print('Part 1:', part_one())
+print('Part 2:', part_two())
