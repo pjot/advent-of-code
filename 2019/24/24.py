@@ -48,14 +48,6 @@ def neighbours(point, recurse=False):
     return ns
 
 
-def hash(grid):
-    points = []
-    for x in range(5):
-        for y in range(5):
-            points.append(grid[x, y])
-    return ''.join(points)
-
-
 def new_value(value, bugs):
     if value == '.' and bugs in [1, 2]:
         return '#'
@@ -100,9 +92,9 @@ def first_repeating(grid):
     seen = set()
     while True:
         grid = iterate_single(grid)
-        h = hash(grid)
+        h = biodiversity(grid)
         if h in seen:
-            return grid
+            return h
         seen.add(h)
 
 
@@ -128,8 +120,7 @@ def count_bugs(grids):
 
 def part_one():
     grid = parse_file('input.map')
-    grid = first_repeating(grid)
-    return biodiversity(grid)
+    return first_repeating(grid)
 
 
 def part_two():
