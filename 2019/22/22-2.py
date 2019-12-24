@@ -14,6 +14,7 @@ def parse_file(file):
 
 
 def mod_inv(x, p):
+    # googled mod inverse
     return pow(x, p-2, p)
 
 
