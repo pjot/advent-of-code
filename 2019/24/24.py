@@ -20,7 +20,9 @@ def neighbours(point, recurse=False):
     }
     if not recurse:
         return ns
+
     ns.discard((2, 2, 0))
+
     if x == 0:
         ns.add((1, 2, 1))
     if y == 0:
@@ -29,6 +31,7 @@ def neighbours(point, recurse=False):
         ns.add((2, 3, 1))
     if x == 4:
         ns.add((3, 2, 1))
+
     if point == (1, 2):
         for y in range(5):
             ns.add((0, y, -1))
@@ -41,7 +44,9 @@ def neighbours(point, recurse=False):
     if point == (2, 3):
         for x in range(5):
             ns.add((x, 4, -1))
+
     return ns
+
 
 def hash(grid):
     points = []
@@ -72,6 +77,10 @@ def iterate_single(grid):
     return new
 
 
+def is_bug(grids, level, point):
+    return grids.get(level, {}).get(point, '.') == '#'
+
+
 def iterate_multiple(grids):
     new = defaultdict(dict)
     for level, grid in grids.items():
@@ -81,7 +90,7 @@ def iterate_multiple(grids):
                 continue
             bugs = sum(
                 1 for x, y, n_level in neighbours(point, True)
-                if grids.get(level + n_level, {}).get((x, y), '.') == '#'
+                if is_bug(grids, level + n_level, (x, y))
             )
             new[level][point] = new_value(value, bugs)
     return new
