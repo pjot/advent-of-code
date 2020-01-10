@@ -18,13 +18,6 @@ def possible(n, road, ports):
     return p
 
 
-def new_nodes(ports, n, road):
-    nodes = []
-    for i, new_n in possible(n, road, ports):
-        nodes.append((new_n, road + [i]))
-    return nodes
-
-
 def search(ports, n=0, road=None):
     road = road or []
     nodes = []
