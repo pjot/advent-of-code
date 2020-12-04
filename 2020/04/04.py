@@ -1,18 +1,5 @@
 import re
 
-with open('input.txt') as f:
-    things = []
-    thing = {}
-    for line in f.readlines():
-        if len(line.strip()) == 0:
-            things.append(thing)
-            thing = {}
-        else:
-            items = line.strip().split()
-            for item in items:
-                key, val = item.split(':')
-                thing[key] = val
-
 def has_required_fields(thing):
     required_fields = [
         'byr', 'iyr', 'eyr', 'hgt',
@@ -65,8 +52,17 @@ def has_valid_fields(thing):
 
     return True
 
-has_fields = 0
-valid = 0
+things = []
+with open('input.txt') as f:
+    for line in f.read().split('\n\n'):
+        items = line.strip().split()
+        thing = {}
+        for item in items:
+            key, val = item.split(':')
+            thing[key] = val
+        things.append(thing)
+
+has_fields = valid = 0
 for thing in things:
     if has_required_fields(thing):
         has_fields += 1
