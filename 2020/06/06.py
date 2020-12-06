@@ -1,8 +1,6 @@
 from collections import Counter
 
 with open('input.txt') as f:
-    one = 0
-    two = 0
     for group in f.read().split('\n\n'):
         group = group.strip()
         letters = set(group)
