@@ -1,10 +1,6 @@
 import re
 from collections import defaultdict
 
-def parse_child(child):
-    count, name = child.split(maxsplit=1)
-    return int(count), name
-
 tree = defaultdict(list)
 parents = defaultdict(set)
 with open('input.txt') as f:
@@ -13,18 +9,18 @@ with open('input.txt') as f:
         children = re.findall(r'(\d+ \w+ \w+) bags?', line)
 
         for child in children:
-            c = parse_child(child)
+            count, name = child.split(maxsplit=1)
 
-            parents[c[1]].add(parent)
-            tree[parent].append(c)
+            parents[name].add(parent)
+            tree[parent].append((int(count), name))
 
-seen = set()
-def visit(child):
+def visit(child, seen):
     for parent in parents[child]:
         seen.add(parent)
-        visit(parent)
+        seen |= visit(parent, seen)
+    return seen
 
-visit('shiny gold')
+seen = visit('shiny gold', set())
 
 print('Part 1:', len(seen))
 
