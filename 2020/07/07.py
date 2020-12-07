@@ -20,9 +20,7 @@ def visit(child, seen):
         seen |= visit(parent, seen)
     return seen
 
-seen = visit('shiny gold', set())
-
-print('Part 1:', len(seen))
+print('Part 1:', len(visit('shiny gold', set())))
 
 def contents(bag):
     bags = 0
