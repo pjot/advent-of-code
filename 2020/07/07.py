@@ -5,45 +5,34 @@ def parse_child(child):
     count, name = child.split(maxsplit=1)
     return int(count), name
 
-tree = {}
+tree = defaultdict(list)
+parents = defaultdict(set)
 with open('input.txt') as f:
     for line in f.readlines():
         parent = re.findall(r'(\w+ \w+) bags contain', line)[0]
-        children = re.findall(r'(\w+ \w+ \w+) bags?', line)
+        children = re.findall(r'(\d+ \w+ \w+) bags?', line)
 
-        tree[parent] = [
-            parse_child(child) for child in children
-            if child != 'contain no other'
-        ]
+        for child in children:
+            c = parse_child(child)
 
-ways = {'shiny gold'}
-prev = 0
-while prev != len(ways):
-    prev = len(ways)
-    for parent, children in tree.items():
-        for way in list(ways):
-            for _, child in children:
-                if child == way:
-                    ways.add(parent)
+            parents[c[1]].add(parent)
+            tree[parent].append(c)
 
-print('Part 1:', len(ways) - 1)
+seen = set()
+def visit(child):
+    for parent in parents[child]:
+        seen.add(parent)
+        visit(parent)
 
-hand = {'shiny gold': 1}
-found = 0
-prev = -1
-while prev != found:
-    prev = found
-    next_hand = defaultdict(int)
-    for parent, parent_count in hand.items():
-        if not tree[parent]:
-            next_hand[parent] = parent_count
+visit('shiny gold')
 
-        for child_count, child in tree[parent]:
-            total_count = child_count * parent_count
-            found += total_count
+print('Part 1:', len(seen))
 
-            next_hand[child] += total_count
+def contents(bag):
+    bags = 0
+    for count, child in tree[bag]:
+        # plus one is the current bag
+        bags += count * (contents(child) + 1)
+    return bags
 
-    hand = next_hand
-
-print('Part 2:', found)
+print('Part 2:', contents('shiny gold'))
