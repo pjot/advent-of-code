@@ -7,9 +7,18 @@ def parse(file):
             program[i] = (op, arg)
     return program
 
+def iterate(code, pos, acc):
+    op, arg = code[pos]
+
+    if op == 'nop':
+        return pos + 1, acc
+    elif op == 'jmp':
+        return pos + arg, acc
+    elif op == 'acc':
+        return pos + 1, acc + arg
+
 def run(code):
-    acc = 0
-    pos = 0
+    acc = pos = 0
     seen = set()
     while True:
         if pos in seen:
@@ -18,17 +27,7 @@ def run(code):
             return 'TERM', acc
 
         seen.add(pos)
-        op, arg = code[pos]
-
-        if op == 'nop':
-            pos += 1
-
-        elif op == 'jmp':
-            pos += arg
-
-        elif op == 'acc':
-            acc += arg
-            pos += 1
+        pos, acc = iterate(code, pos, acc)
 
 def potential_fix(code):
     for i, instruction in code.items():
