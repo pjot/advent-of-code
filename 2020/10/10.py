@@ -14,13 +14,13 @@ diffs.append(3)
 print('Part 1:', diffs.count(1) * diffs.count(3))
 
 tree = defaultdict(list)
-for i, x in enumerate(s):
-    for ii in range(i+1, i+4):
-        if ii >= len(s):
+for i, parent in enumerate(s):
+    for j in range(i+1, i+4):
+        if j >= len(s):
             continue
-        a = s[ii]
-        if 0 < a - x <= 3:
-            tree[x].append(a)
+        child = s[j]
+        if 0 < child - parent <= 3:
+            tree[parent].append(child)
 
 tree[max(s)] = [max(s) + 3]
 
