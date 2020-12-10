@@ -24,7 +24,7 @@ for i, parent in enumerate(s):
 
 tree[max(s)] = [max(s) + 3]
 
-@lru_cache(None)
+@lru_cache()
 def search(p):
     if p not in tree.keys():
         return 1
