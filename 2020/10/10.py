@@ -4,34 +4,25 @@ from functools import lru_cache
 with open('input.txt') as f:
     adapters = [int(i) for i in f.readlines()]
 
-s = [0] + sorted(adapters)
+adapters = [0] + sorted(adapters) + [max(adapters) + 3]
 
 diffs = []
-for i in range(1, len(s)):
-    diffs.append(s[i] - s[i-1])
-diffs.append(3)
+for i, a in enumerate(adapters[1:]):
+    b = adapters[i]
+    diffs.append(a - b)
 
 print('Part 1:', diffs.count(1) * diffs.count(3))
 
-tree = defaultdict(list)
-for i, parent in enumerate(s):
-    for j in range(i+1, i+4):
-        if j >= len(s):
-            continue
-        child = s[j]
-        if 0 < child - parent <= 3:
-            tree[parent].append(child)
+diffs = ''.join(str(d) for d in diffs)
+ways = 1
+while '1111' in diffs:
+    ways *= 7
+    diffs = diffs.replace('1111', '', 1)
+while '111' in diffs:
+    ways *= 4
+    diffs = diffs.replace('111', '', 1)
+while '11' in diffs:
+    ways *= 2
+    diffs = diffs.replace('11', '', 1)
 
-tree[max(s)] = [max(s) + 3]
-
-@lru_cache()
-def search(p):
-    if p not in tree.keys():
-        return 1
-
-    cnt = 0
-    for c in tree[p]:
-        cnt += search(c)
-    return cnt
-
-print('Part 2:', search(0))
+print('Part 2:', ways)
