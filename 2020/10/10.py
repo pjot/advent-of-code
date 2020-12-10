@@ -1,6 +1,3 @@
-from collections import defaultdict
-from functools import lru_cache
-
 with open('input.txt') as f:
     adapters = [int(i) for i in f.readlines()]
 
