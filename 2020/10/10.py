@@ -11,15 +11,13 @@ for i, a in enumerate(adapters[1:]):
 print('Part 1:', diffs.count(1) * diffs.count(3))
 
 diffs = ''.join(str(d) for d in diffs)
-ways = 1
-while '1111' in diffs:
-    ways *= 7
-    diffs = diffs.replace('1111', '', 1)
-while '111' in diffs:
-    ways *= 4
-    diffs = diffs.replace('111', '', 1)
-while '11' in diffs:
-    ways *= 2
-    diffs = diffs.replace('11', '', 1)
 
-print('Part 2:', ways)
+sevens = 7 ** diffs.count('1111')
+diffs = diffs.replace('1111', '')
+
+fours = 4 ** diffs.count('111')
+diffs = diffs.replace('111', '')
+
+twos = 2 ** diffs.count('11')
+
+print('Part 2:', sevens * fours * twos)
