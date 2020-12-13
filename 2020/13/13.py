@@ -12,6 +12,15 @@ def next_bus(time, buses):
             if t % b == 0:
                 return b * (t - time)
 
+'''
+x % 17 = 0
+x % 13 = 13 - 2
+x % 19 = 19 - 3
+
+x % 13 = 17n - 2 -> step = 17 -> find x'
+x % 19 = x'm - 3 -> step = x' -> find x''
+etc
+'''
 def first_consecutive(buses):
     ans = 1
     step = 1
