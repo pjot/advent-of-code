@@ -217,10 +217,64 @@ def sea_monster_at(sea_monster, image, x0, y0):
             return False
     return True
 
+def build_rows(corner_tiles, edge_tiles, inner_tiles):
+    def delete_tile(tile):
+        if tile in edge_tiles:
+            edge_tiles.remove(tile)
+        if tile in inner_tiles:
+            inner_tiles.remove(tile)
+        if tile in corner_tiles:
+            corner_tiles.remove(tile)
+
+    def build_row(start, row_index, last_row=None):
+        current = start
+        row = [start]
+        while len(row) < dimension:
+            last_tile = None if row_index == 0 else last_row[len(row)]
+
+            if row_index == 0 or row_index == dimension - 1 or len(row) == dimension - 1:
+                tile = check_tiles(current, edge_tiles, last_tile)
+                if not tile:
+                    tile = check_tiles(current, corner_tiles, last_tile)
+                current = tile
+                row.append(tile)
+                delete_tile(tile)
+                continue
+            else:
+                tile = check_tiles(current, inner_tiles, last_tile)
+                if not tile:
+                    tile = check_tiles(current, edge_tiles, last_tile)
+                current = tile
+                row.append(tile)
+                delete_tile(tile)
+                continue
+
+        return row
+
+    def next_start(prev):
+        se = edges(prev)
+        for ts in [edge_tiles, corner_tiles]:
+            for tile in ts:
+                te = edges(tile)
+                if len(se & te) == 1:
+                    return tile
+
+    start = corner_tiles.pop()
+    rows = []
+    row_index = 0
+    row = None
+    while len(rows) < dimension:
+        row = build_row(start, row_index, row)
+        rows.append(row)
+        start = next_start(start)
+        delete_tile(start)
+        row_index += 1
+
+    return rows
+
+
 tiles, full_tiles, dimension = parse('input.txt')
-corner_edges = set(
-    edge for edge, cnt in edge_counts(tiles).items() if cnt == 1
-)
+corner_edges = set(edge for edge, cnt in edge_counts(tiles).items() if cnt == 1)
 corner_tiles, edge_tiles, inner_tiles = classify_tiles(tiles, corner_edges)
 
 corners = 1
@@ -228,59 +282,7 @@ for corner in corner_tiles:
     corners *= corner
 
 print('Part 1:', corners)
-
-def delete_tile(tile):
-    if tile in edge_tiles:
-        edge_tiles.remove(tile)
-    if tile in inner_tiles:
-        inner_tiles.remove(tile)
-    if tile in corner_tiles:
-        corner_tiles.remove(tile)
-
-def build_row(start, row_index, last_row=None):
-    current = start
-    row = [start]
-    while len(row) < dimension:
-        last_tile = None if row_index == 0 else last_row[len(row)]
-
-        if row_index == 0 or row_index == dimension - 1 or len(row) == dimension - 1:
-            tile = check_tiles(current, edge_tiles, last_tile)
-            if not tile:
-                tile = check_tiles(current, corner_tiles, last_tile)
-            current = tile
-            row.append(tile)
-            delete_tile(tile)
-            continue
-        else:
-            tile = check_tiles(current, inner_tiles, last_tile)
-            if not tile:
-                tile = check_tiles(current, edge_tiles, last_tile)
-            current = tile
-            row.append(tile)
-            delete_tile(tile)
-            continue
-
-    return row
-
-def next_start(prev):
-    se = edges(prev)
-    for ts in [edge_tiles, corner_tiles]:
-        for tile in ts:
-            te = edges(tile)
-            if len(se & te) == 1:
-                return tile
-        
-start = corner_tiles.pop()
-rows = []
-row_index = 0
-row = None
-while len(rows) < dimension:
-    row = build_row(start, row_index, row)
-    rows.append(row)
-    start = next_start(start)
-    delete_tile(start)
-    row_index += 1
-
+rows = build_rows(corner_tiles, edge_tiles, inner_tiles)
 tile_grid = build_tile_grid(full_tiles, rows)
 grid = build_grid(tile_grid)
 image = build_image(grid)
