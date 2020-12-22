@@ -1,6 +1,5 @@
 from collections import deque
 from copy import copy
-from functools import lru_cache
 
 def parse():
     with open('input.txt') as f:
