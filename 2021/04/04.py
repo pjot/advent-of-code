@@ -20,9 +20,9 @@ def is_bingo(line):
 
 def winner(b):
     for x in range(5):
-        squares_x = [b[x, 0], b[x, 1], b[x, 2], b[x, 3], b[x, 4]]
-        squares_y = [b[0, x], b[1, x], b[2, x], b[3, x], b[4, x]]
-        if is_bingo(squares_x) or is_bingo(squares_y):
+        rows = [b[x, 0], b[x, 1], b[x, 2], b[x, 3], b[x, 4]]
+        columns = [b[0, x], b[1, x], b[2, x], b[3, x], b[4, x]]
+        if is_bingo(rows) or is_bingo(columns):
             return b
 
 def score(board, n):
