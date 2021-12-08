@@ -88,10 +88,7 @@ def try_mapping(mapping, inputs, outputs):
     n = ''
     for i in outputs:
         s = parse_signal(mapping, i)
-        if numbers.get(s) is not None:
-            n += str(numbers.get(s))
-        else:
-            return
+        n += str(numbers.get(s))
 
     return int(n)
 
@@ -104,7 +101,7 @@ def reduce(possible):
         possible['e'] -= possible['c']
         possible['g'] -= possible['c']
 
-    # Reduce because we know some mappings
+    # Reduce because we know some mappings already
     done = {}
     for k, v in possible.items():
         if len(v) == 1:
@@ -118,8 +115,8 @@ def reduce(possible):
     for k, v in possible.items():
         for k2, v2 in possible.items():
             if k != k2 and v == v2:
-                for l in all_but(k + k2):
-                    possible[l] -= v
+                for c in all_but(k + k2):
+                    possible[c] -= v
     return possible
 
 one = 0
@@ -132,9 +129,6 @@ two = 0
 for i, o in zip(inputs, outputs):
     possible = {k: set(values) for k in values}
     for signal in i:
-        possible = handle_signal(possible, signal)
-
-    for signal in o:
         possible = handle_signal(possible, signal)
 
     possible = reduce(possible)
