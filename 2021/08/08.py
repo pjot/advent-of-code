@@ -1,3 +1,5 @@
+import itertools
+
 def parse(file):
     inputs = []
     outputs = []
@@ -25,7 +27,6 @@ numbers = {
     'abcdfg': 9,
 }
 values = 'abcdefg'
-possible = {k: set(values) for k in values}
 
 def all_but(s):
     rest = set(values)
@@ -33,126 +34,116 @@ def all_but(s):
         rest.remove(c)
     return rest
 
-def handle_digit(possible, d):
-    remaining = all_but(d)
-    if len(d) == 2:
-        for c in remaining:
-            possible['c'].discard(c)
-            possible['f'].discard(c)
+def handle_signal(possible, signal):
+    remaining = all_but(signal)
+    if len(signal) == 2:
+        possible['c'] -= remaining
+        possible['f'] -= remaining
 
-    if len(d) == 3:
-        for c in remaining:
-            possible['a'].discard(c)
-            possible['c'].discard(c)
-            possible['f'].discard(c)
+    if len(signal) == 3:
+        possible['a'] -= remaining
+        possible['c'] -= remaining
+        possible['f'] -= remaining
 
-    if len(d) == 4:
-        for c in remaining:
-            possible['b'].discard(c)
-            possible['c'].discard(c)
-            possible['d'].discard(c)
-            possible['f'].discard(c)
+    if len(signal) == 4:
+        possible['b'] -= remaining
+        possible['c'] -= remaining
+        possible['d'] -= remaining
+        possible['f'] -= remaining
 
     return possible
 
-def perms(possible):
+def flip(n):
+    return 1 if n == 0 else 0
+
+def permutations(possible):
     possible = {
-        k: list(v)
-        for k, v in possible.items()
+        k: list(v) for k, v in possible.items()
     }
-    ps = [
-        [0, 0, 0],
-        [0, 0, 1],
-        [0, 1, 0],
-        [0, 1, 1],
-        [1, 0, 0],
-        [1, 0, 1],
-        [1, 1, 0],
-        [1, 1, 1],
-    ]
-    for p in ps:
-        b, c, e = p
+    cases = itertools.product(range(2), repeat=3)
+    for case in cases:
+        b, c, e = case
         yield {
             'a': possible['a'][0],
             'b': possible['b'][b],
             'c': possible['c'][c],
-            'd': possible['d'][0 if b == 1 else 1],
+            'd': possible['d'][flip(b)],
             'e': possible['e'][e],
-            'f': possible['f'][0 if c == 1 else 1],
-            'g': possible['g'][0 if e == 1 else 1],
+            'f': possible['f'][flip(c)],
+            'g': possible['g'][flip(e)],
         }
 
-def is_valid(mapping, inputs, outputs):
+def parse_signal(mapping, signal):
+    signal = signal.upper()
+    for output, input in mapping.items():
+        signal = signal.replace(input.upper(), output)
+    return ''.join(sorted(signal))
+
+def try_mapping(mapping, inputs, outputs):
     for i in inputs:
-        m = i.upper()
-        for k, v in mapping.items():
-            m = m.replace(v.upper(), k)
-        m = ''.join(sorted(m))
-        if not numbers.get(m) is not None:
+        s = parse_signal(mapping, i)
+        if not numbers.get(s) is not None:
             return
 
     n = ''
     for i in outputs:
-        m = i.upper()
-        for k, v in mapping.items():
-            m = m.replace(v.upper(), k)
-        m = ''.join(sorted(m))
-        if numbers.get(m) is not None:
-            n += str(numbers.get(m))
+        s = parse_signal(mapping, i)
+        if numbers.get(s) is not None:
+            n += str(numbers.get(s))
         else:
             return
 
     return int(n)
 
-
-o_sum = 0
-for i, o in zip(inputs, outputs):
-    possible = {k: set(values) for k in values}
-    for d in i:
-        possible = handle_digit(possible, d)
-
-    for d in o:
-        possible = handle_digit(possible, d)
-
+def reduce(possible):
+    # Reduce because of c and f:
     if len(possible['c']) == 2:
-        for c in possible['c']:
-            possible['a'].discard(c)
-            possible['b'].discard(c)
-            possible['d'].discard(c)
-            possible['e'].discard(c)
-            possible['g'].discard(c)
+        possible['a'] -= possible['c']
+        possible['b'] -= possible['c']
+        possible['d'] -= possible['c']
+        possible['e'] -= possible['c']
+        possible['g'] -= possible['c']
 
-    if len(possible['f']) == 2:
-        for c in possible['f']:
-            possible['a'].discard(c)
-            possible['b'].discard(c)
-            possible['d'].discard(c)
-            possible['e'].discard(c)
-            possible['g'].discard(c)
-
+    # Reduce because we know some mappings
     done = {}
     for k, v in possible.items():
         if len(v) == 1:
             done[k] = v
 
-
     for k, v in done.items():
-        for c in values:
-            if c != k:
-                possible[c] -= v
+        for c in all_but(k):
+            possible[c] -= v
 
+    # Reduce because we know some pairs of mappings
     for k, v in possible.items():
         for k2, v2 in possible.items():
             if k != k2 and v == v2:
-                for l in values:
-                    if l not in [k, k2]:
-                        for c in v:
-                            possible[l].discard(c)
+                for l in all_but(k + k2):
+                    possible[l] -= v
+    return possible
 
-    for per in perms(possible):
-        r = is_valid(per, i, o)
-        if r is not None:
-            o_sum += r
+one = 0
+for o in outputs:
+    for signal in o:
+        if len(signal) in [2, 3, 4, 7]:
+            one +=1
+
+two = 0
+for i, o in zip(inputs, outputs):
+    possible = {k: set(values) for k in values}
+    for signal in i:
+        possible = handle_signal(possible, signal)
+
+    for signal in o:
+        possible = handle_signal(possible, signal)
+
+    possible = reduce(possible)
+
+    for permutation in permutations(possible):
+        output = try_mapping(permutation, i, o)
+        if output is not None:
+            two += output
             break
 
-print('Part 2:', o_sum)
+print('Part 1:', one)
+print('Part 2:', two)
