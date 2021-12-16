@@ -1,30 +1,50 @@
 from collections import Counter
 
 rules = {}
+pairs = Counter()
 with open('input.txt') as f:
-    polymer = f.readline().strip()
+    a, b = '', ''
+    for c in f.readline().strip():
+        a, b = b, c
+        if len(a + b) == 2:
+            pairs[a + b] += 1
+
     f.readline()
+
     for line in f.readlines():
         pair, insert = line.strip().split(' -> ')
-        rules[(pair[0], pair[1])] = insert
+        rules[pair] = insert
+
+
+def answer(pairs):
+    counts = Counter()
+    for pair, count in pairs.items():
+        a, b = list(pair)
+        counts[a] += count
+        counts[b] += count
+    counts = {k: int(v / 2) for k, v in counts.items()}
+
+    most = 0
+    least = float('inf')
+    for value in counts.values():
+        most = max(most, value)
+        least = min(least, value)
+
+    return most - least
+
+def iterate(pairs, rules):
+    new_pairs = Counter()
+    for pair, count in pairs.items():
+        if insert := rules.get(pair):
+            a, b = list(pair)
+            new_pairs[a + insert] += count
+            new_pairs[insert + b] += count
+    return new_pairs
 
 for step in range(1, 41):
-    print(step)
-    p = a = b = ''
-    for c in polymer:
-        a, b = b, c
+    pairs = iterate(pairs, rules)
+    if step == 10:
+        print("Part 1:", answer(pairs))
 
-        if (a, b) in rules:
-            p += a + rules[(a, b)]
+print("Part 2:", answer(pairs))
 
-    polymer = p + b
-    #print(step, polymer)
-
-counts = Counter(polymer)
-most_common = 0
-least_common = float('inf')
-for c, v in counts.items():
-    most_common = max(most_common, v)
-    least_common = min(least_common, v)
-
-print(most_common - least_common)
