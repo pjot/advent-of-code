@@ -52,9 +52,11 @@ def solve(grid, end):
     horizon = [(0, (0, 0))]
     seen = set((0, 0))
     costs = {(0, 0): 0}
+    horizon_set = set(horizon)
 
     while horizon:
-        _, h = heappop(horizon)
+        c, h = heappop(horizon)
+        horizon_set.remove((c, h))
         seen.add(h)
         for n in neighbours(g, h):
             if n in seen:
@@ -66,8 +68,9 @@ def solve(grid, end):
             )
 
             costs[n] = cost
-            if (cost, n) not in horizon:
+            if (cost, n) not in horizon_set:
                 heappush(horizon, (cost, n))
+                horizon_set.add((cost, n))
 
     return costs[end]
 
