@@ -44,10 +44,6 @@ def neighbours(grid, p):
         if grid.get(pp):
             yield pp
 
-def lowest_neighbour(g, p):
-    ns = [g.get(n, INF) for n in neighbours(g, p)]
-    return min(ns) if ns else 0
-
 def solve(grid, end):
     horizon = [(0, (0, 0))]
     seen = set((0, 0))
@@ -64,11 +60,11 @@ def solve(grid, end):
 
             cost = min(
                 costs.get(n, INF),
-                g[n] + lowest_neighbour(costs, n)
+                g[n] + costs[h]
             )
 
             costs[n] = cost
-            if (cost, n) not in horizon_set:
+            if (cost, n) not in horizon:
                 heappush(horizon, (cost, n))
                 horizon_set.add((cost, n))
 
