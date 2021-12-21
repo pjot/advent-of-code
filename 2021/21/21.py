@@ -14,6 +14,11 @@ def die():
 def next_position(position, roll):
     return (position + roll - 1) % 10 + 1
 
+def next_turn(turn):
+    if turn == 1:
+        return 2
+    return 1
+
 def play(player, d):
     roll = next(d) + next(d) + next(d)
 
@@ -24,17 +29,25 @@ def play(player, d):
 
 def one(player_1, player_2):
     d = die()
-    casts = 0
+    turn = 1
+    turns = 0
     while True:
-        player_1 = play(player_1, d)
-        casts += 3
-        if player_1[1] >= 1000:
-            return casts * player_2[1]
+        if turn == 1:
+            player_1 = play(player_1, d)
+        if turn == 2:
+            player_2 = play(player_2, d)
 
-        player_2 = play(player_2, d)
-        casts += 3
-        if player_2[1] >= 1000:
-            return casts * player_1[1]
+        turns += 1
+
+        _, score_1 = player_1
+        _, score_2 = player_2
+
+        if score_1 >= 1000:
+            return turns * 3 * score_2
+        if score_2 >= 1000:
+            return turns * 3 * score_1
+
+        turn = next_turn(turn)
 
 rolls = [
     3, 4, 5,
@@ -68,7 +81,7 @@ def two(player_1, player_2, turn):
             sub_wins = two(
                 (position, score) if turn == 1 else player_1,
                 (position, score) if turn == 2 else player_2,
-                2 if turn == 1 else 1
+                next_turn(turn)
             )
             wins[1] += sub_wins[1]
             wins[2] += sub_wins[2]
