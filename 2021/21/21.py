@@ -15,9 +15,7 @@ def next_position(position, roll):
     return (position + roll - 1) % 10 + 1
 
 def next_turn(turn):
-    if turn == 1:
-        return 2
-    return 1
+    return 2 if turn == 1 else 1
 
 def play(player, d):
     roll = next(d) + next(d) + next(d)
