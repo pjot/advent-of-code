@@ -52,15 +52,8 @@ def scenic_score(grid, point):
 
 grid, mx, my = parse("input.txt")
 
-visible = 0
-highest_score = 0
-for y in range(my + 1):
-    for x in range(mx + 1):
-        if is_visible(grid, (x, y)):
-            visible += 1
+visible = [p for p in grid.keys() if is_visible(grid, p)]
+scores = [scenic_score(grid, p) for p in grid.keys()]
 
-        score = scenic_score(grid, (x, y))
-        highest_score = max(highest_score, score)
-
-print("Part 1:", visible)
-print("Part 2:", highest_score)
+print("Part 1:", len(visible))
+print("Part 2:", max(scores))
