@@ -1,4 +1,3 @@
-import time
 def parse(file):
     movements = []
     with open(file) as f:
