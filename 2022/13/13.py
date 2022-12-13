@@ -19,27 +19,28 @@ def is_int(n):
     return isinstance(n, int)
 
 def compare(one, two):
-    if is_list(one) and is_int(two):
-        return compare(one, [two])
+    match one, two:
+        case list(), int():
+            return compare(one, [two])
 
-    elif is_int(one) and is_list(two):
-        return compare([one], two)
+        case int(), list():
+            return compare([one], two)
 
-    elif is_int(one) and is_int(two):
-        if one < two:
-            return 1
-        elif one > two:
-            return -1
+        case int(), int():
+            if one < two:
+                return 1
+            elif one > two:
+                return -1
 
-    elif is_list(one) and is_list(two):
-        for a, b in zip(one, two):
-            if (c := compare(a, b)) != 0:
-                return c
+        case list(), list():
+            for a, b in zip(one, two):
+                if (c := compare(a, b)) != 0:
+                    return c
 
-        if len(one) < len(two):
-            return 1
-        if len(two) < len(one):
-            return -1
+            if len(one) < len(two):
+                return 1
+            if len(two) < len(one):
+                return -1
 
     return 0
 
