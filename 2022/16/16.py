@@ -1,3 +1,5 @@
+import itertools
+import functools
 from collections import defaultdict
 
 def parse(file):
@@ -61,53 +63,64 @@ def calculate_distances(valves):
 
     return valve_distances
 
-def pressure_for_path(path, distances):
-    path = list(path)
-    pressure = 0
-    minute = 0
-    current = path.pop(0)
-    while path:
-        n = path.pop(0)
-        # move
-        minute += distances[current][n]
-        # open valve
-        minute += 1
 
-        rate, _ = valves[n]
-        pressure += (30 - minute) * rate
-
-        current = n
-    return pressure
-
-def generate_paths(distances):
-    paths = []
-    horizon = [(30, ["AA"])]
+def generate_paths(limit):
+    paths = set()
+    horizon = [(limit, ["AA"])]
     while horizon:
         new_horizon = []
         for time, path in horizon:
             current = path[-1]
-            added = False
-            for n, d in distances[current].items():
+            paths.add(tuple(path))
+            for n, d in valve_distances[current].items():
                 if n in path:
                     continue
                 if time - d - 2 < 0:
                     continue
                 new_horizon.append((time - d - 1, path + [n]))
-                added = True
-            if not added:
-                paths.append(path)
         horizon = new_horizon
     return paths
 
-def highest_pressure(paths, distances):
+def highest_pressure(paths, limit=30):
     highest = 0
     for path in paths:
-        pressure = pressure_for_path(path, valve_distances)
+        pressure = pressure_for_path(path, limit)
         highest = max(pressure, highest)
     return highest
 
+@functools.cache
+def pressure_for_path(path, limit):
+    path = list(path)
+    pressure = 0
+    minute = 0
+    current = path.pop(0)
+    while path and limit > minute:
+        n = path.pop(0)
+        # move
+        minute += valve_distances[current][n]
+        # open valve
+        minute += 1
+
+        rate, _ = valves[n]
+        pressure += (limit - minute) * rate
+
+        current = n
+    return pressure
+
 valves = parse("input.txt")
 valve_distances = calculate_distances(valves)
-paths = generate_paths(valve_distances)
+paths = generate_paths(30)
 
-print("Part 1:", highest_pressure(paths, valve_distances))
+print("Part 1:", highest_pressure(paths))
+
+paths = generate_paths(26)
+best = 0
+for a, b in itertools.combinations(paths, 2):
+    if set(a) & set(b) == {"AA"}:
+        pressure = (
+            pressure_for_path(a, 26) +
+            pressure_for_path(b, 26)
+        )
+        best = max(pressure, best)
+
+print("Part 2:", best)
