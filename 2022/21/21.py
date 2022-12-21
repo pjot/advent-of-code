@@ -28,14 +28,10 @@ def reduce(monkeys, done, special_root=False):
 
             else:
                 match action:
-                    case "+":
-                        value = f"({a} + {b})"
-                    case "-":
-                        value = f"({a} - {b})"
-                    case "*":
-                        value = f"({a} * {b})"
-                    case "/":
-                        value = f"({a} // {b})"
+                    case "+": value = f"({a} + {b})"
+                    case "-": value = f"({a} - {b})"
+                    case "*": value = f"({a} * {b})"
+                    case "/": value = f"({a} // {b})"
 
             done[m] = value
             remove.append(m)
@@ -46,10 +42,9 @@ def reduce(monkeys, done, special_root=False):
 def binary_search(expr):
     h = 1
     while True:
+        h *= 10
         r = eval(expr)
-        if r < 0:
-            h *= 10
-        else:
+        if r > 0:
             break
 
     d = h // 2
@@ -59,11 +54,7 @@ def binary_search(expr):
         if r == 0:
             return h
 
-        if r > 0:
-            h -= d
-        else:
-            h += d
-
+        h = h - d if r > 0 else h + d
         d = d // 2
 
         if d == 0:
