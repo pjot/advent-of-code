@@ -44,14 +44,7 @@ def two(sequence, directions):
         for start in starts
     ]
 
-    return least_common_multiple(loops)
-
-def least_common_multiple(numbers):
-    lcm = 1
-    for n in numbers:
-        lcm = int(lcm * n / math.gcd(lcm, n))
-
-    return lcm
+    return math.lcm(*loops)
 
 inputs = parse("input")
 print("Part 1:", one(*inputs))
