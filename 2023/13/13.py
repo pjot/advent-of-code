@@ -17,38 +17,44 @@ def is_reflection(lines, p):
             return False
     return True
 
-def value(grid, p, o):
-    if grid[p] == "#":
-        return "0" if p == o else "1"
-    return "1" if p == o else "0"
+def value(grid, p, flip):
+    v = 1 if grid[p] == "#" else -1
+    if p == flip:
+        v *= -1
+    return v
 
 def reflection_points(lines):
-    for p in range(1, len(lines)):
+    for p, _ in enumerate(lines):
+        if p == 0:
+            continue
         if is_reflection(lines, p):
             yield p
 
-def reflections(grid, ox=-1, oy=-1):
-    res = set()
-    max_x = max([p[0] for p in grid.keys()]) + 1
-    max_y = max([p[1] for p in grid.keys()]) + 1
-    override = (ox, oy)
+def reflections(grid, flip=None):
+    res, xs, ys = set(), set(), set()
+
+    for x, y in grid.keys():
+        xs.add(x)
+        ys.add(y)
+    xs = sorted(list(xs))
+    ys = sorted(list(ys))
 
     rows = []
-    for y in range(max_y):
-        row = ""
-        for x in range(max_x):
-            row += value(grid, (x, y), override)
-        rows.append(int(row, 2))
+    for y in ys:
+        rows.append([
+            value(grid, (x, y), flip)
+            for x in xs
+        ])
 
     for r in reflection_points(rows):
         res.add(r * 100)
 
     cols = []
-    for x in range(max_x):
-        col = ""
-        for y in range(max_y):
-            col += value(grid, (x, y), override)
-        cols.append(int(col, 2))
+    for x in xs:
+        cols.append([
+            value(grid, (x, y), flip)
+            for y in ys
+        ])
 
     for r in reflection_points(cols):
         res.add(r)
@@ -56,12 +62,12 @@ def reflections(grid, ox=-1, oy=-1):
     return res
 
 def with_replacement(grid):
-    r1 = reflections(grid)
+    old = reflections(grid)
 
-    for x, y in grid.keys():
-        r = reflections(grid, x, y)
-        if r - r1:
-            return (r - r1).pop()
+    for flip in grid.keys():
+        new = reflections(grid, flip)
+        if new - old:
+            return (new - old).pop()
 
 grids = parse("input")
 
