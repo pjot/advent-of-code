@@ -1,120 +1,70 @@
 def parse(file):
-    walls = set()
-    pebbles = set()
     with open(file) as f:
-        for y, line in enumerate(f.readlines()):
-            for x, c in enumerate(line):
-                if c == "#":
-                    walls.add((x, y))
-                if c == "O":
-                    pebbles.add((x, y))
-    return walls, pebbles
+        return [l.strip() for l in f.readlines()]
 
-def move(p, direction, things, max_x, max_y):
-    x, y = p
-    while True:
-        match direction:
-            case "N":
-                pn = x, y - 1
-            case "S":
-                pn = x, y + 1
-            case "E":
-                pn = x + 1, y
-            case "W":
-                pn = x - 1, y
+def transpose(lines):
+    new_lines = []
+    for x, _ in enumerate(lines[0]):
+        line = ""
+        for l in lines:
+            line += l[x]
+        new_lines.append(line)
+    return new_lines
 
-        if pn in things:
-            return x, y
+def flip(lines):
+    return [line[::-1] for line in lines]
 
-        px, py = pn
+def tilt(line):
+    a, b = "", line
+    while a != b:
+        a, b = b, b.replace(".O", "O.")
+    return b
 
-        if px < 0 or py < 0 or px > max_x or py > max_y:
-            return x, y
+def tilt_left(lines):
+    return [tilt(line) for line in lines]
 
-        x, y = pn
+def tilt_right(lines):
+    return flip(tilt_left(flip(lines)))
 
-def sorter(direction):
-    def k(p):
-        x, y = p
-        match direction:
-            case "N":
-                return y, x
-            case "S":
-                return -y, x
-            case "E":
-                return -x, y
-            case "W":
-                return x, y
-    return k
+def tilt_up(lines):
+    return transpose(tilt_left(transpose(lines)))
 
-def tilt(direction, pebbles, walls):
-    n_peb = sorted(list(pebbles), key=sorter(direction))
-    max_x = max([p[0] for p in pebbles | walls])
-    max_y = max([p[1] for p in pebbles | walls])
+def tilt_down(lines):
+    return transpose(tilt_right(transpose(lines)))
 
-    new_pebbles = set()
+def load(lines):
+    height = len(lines)
+    return sum(
+        (height - y) * line.count("O")
+        for y, line in enumerate(lines)
+    )
 
-    for p in n_peb:
-        x, y = p
-        while True:
-            match direction:
-                case "N":
-                    pn = x, y - 1
-                case "S":
-                    pn = x, y + 1
-                case "E":
-                    pn = x + 1, y
-                case "W":
-                    pn = x - 1, y
+def cycle(lines):
+    lines = tilt_up(lines)
+    lines = tilt_left(lines)
+    lines = tilt_down(lines)
+    lines = tilt_right(lines)
+    return lines
 
-            if pn in new_pebbles | walls:
-                new_pebbles.add((x, y))
-                break
-
-            px, py = pn
-
-            if px < 0 or py < 0 or px > max_x or py > max_y:
-                new_pebbles.add((x, y))
-                break
-
-            x, y = pn
-
-    return new_pebbles
-
-def load(pebbles, walls):
-    max_y = max([p[1] for p in pebbles | walls])
-    return sum(max_y + 1 - y for _, y in pebbles)
-
-def cycle(pebbles, walls):
-    pebbles = tilt("N", pebbles, walls)
-    pebbles = tilt("W", pebbles, walls)
-    pebbles = tilt("S", pebbles, walls)
-    pebbles = tilt("E", pebbles, walls)
-
-    return pebbles
-
-def one(pebbles, walls):
-    pebbles = tilt("N", pebbles, walls)
-    return load(pebbles, walls)
-
-def two(pebbles, walls):
-    states = {}
-    states[frozenset(pebbles)] = 0
+def two(lines):
+    seen = {}
+    seen[tuple(lines)] = 0
 
     big = 1000000000 - 1
 
     for i in range(big):
-        pebbles = cycle(pebbles, walls)
+        lines = cycle(lines)
 
-        f = frozenset(pebbles)
-        if f in states:
-            c = i - states[f]
-            left = big - i
-            if left % c == 0:
-                return load(pebbles, walls)
+        h = tuple(lines)
+        if h in seen:
+            cycle_length = i - seen[h]
+            remaining = big - i
+            if remaining % cycle_length == 0:
+                return load(lines)
         else:
-            states[f] = i
+            seen[h] = i
 
-walls, pebbles = parse("input")
-print("Part 1:", one(pebbles, walls))
-print("Part 2:", two(pebbles, walls))
+lines = parse("input")
+
+print("Part 1:", load(tilt_up(lines)))
+print("Part 2:", two(lines))
