@@ -1,4 +1,5 @@
 from collections import defaultdict
+import heapq
 
 def parse(file):
     grid = {}
@@ -8,73 +9,62 @@ def parse(file):
                 grid[x, y] = int(c)
     return grid
 
-def neighbours(grid, x, y, d, imin, imax):
+def nexts(grid, p, min_step, max_step):
     ns = []
-    if d == "|":
-        l = 0
-        for i in range(1, imin):
-            l += grid.get((x + i, y), 0)
-        for i in range(imin, imax + 1):
-            l += grid.get((x + i, y), 0)
-            ns.append((x + i, y, l))
-        l = 0
-        for i in range(1, imin):
-            l += grid.get((x - i, y), 0)
-        for i in range(imin, imax + 1):
-            l += grid.get((x - i, y), 0)
-            ns.append((x - i, y, l))
-    if d == "-":
-        l = 0
-        for i in range(1, imin):
-            l += grid.get((x, y + i), 0)
-        for i in range(imin, imax + 1):
-            l += grid.get((x, y + i), 0)
-            ns.append((x, y + i, l))
-        l = 0
-        for i in range(1, imin):
-            l += grid.get((x, y - i), 0)
-        for i in range(imin, imax + 1):
-            l += grid.get((x, y - i), 0)
-            ns.append((x, y - i, l))
-    return ns
+    plus = minus = 0
+    x, y, d = p
+    if d == 1:
+        for i in range(max_step):
+            delta = i + 1
+            plus += grid.get((x + delta, y), 0)
+            minus += grid.get((x - delta, y), 0)
 
-def minimum_heat_loss(grid, d, a, b):
-    horizon = {(0, 0, 0)}
-    seen = defaultdict(lambda: float("inf"))
+            if delta >= min_step:
+                ns.append((x - delta, y, minus))
+                ns.append((x + delta, y, plus))
+
+    if d == -1:
+        for i in range(max_step):
+            delta = i + 1
+            plus += grid.get((x, y + delta), 0)
+            minus += grid.get((x, y - delta), 0)
+            if delta >= min_step:
+                ns.append((x, y + delta, plus))
+                ns.append((x, y - delta, minus))
+
+    return [
+        ((x, y, -d), l) for x, y, l in ns
+        if grid.get((x, y))
+    ]
+
+def minimum_heat_loss(grid, min_step, max_step):
+    candidates = [(0, (0, 0, 1)), (0, (0, 0, -1))]
+    heapq.heapify(candidates)
+    seen = set()
     xm = max(p[0] for p in grid.keys())
     ym = max(p[1] for p in grid.keys())
 
-    while horizon:
-        new_horizon = set()
-        for x, y, hl in horizon:
-            if grid.get((x, y)) is None:
+    lowest_loss = float("inf")
+
+    while candidates:
+        hl, c = heapq.heappop(candidates)
+        if c in seen:
+            continue
+        seen.add(c)
+
+        for candidate, c_hl in nexts(grid, c, min_step, max_step):
+            heat_loss = c_hl + hl
+
+            if candidate[0] == xm and candidate[1] == ym:
+                lowest_loss = min(lowest_loss, heat_loss)
                 continue
-            for n in neighbours(grid, x, y, d, a, b):
-                xx, yy, ll = n
-                if grid.get((xx, yy)) is None:
-                    continue
-                loss = ll + hl
-                if loss <= seen[xx, yy, d]:
-                    seen[xx, yy, d] = loss
-                    new_horizon.add((xx, yy, loss))
 
-        horizon = new_horizon
+            if candidate not in seen and heat_loss < lowest_loss:
+                heapq.heappush(candidates, (heat_loss, candidate))
 
-        if d == "|":
-            d = "-"
-        else:
-            d = "|"
-
-    return min(seen[xm, ym, d] for d in "-|")
-
-
-def steps(grid, a, b):
-    return min(
-        minimum_heat_loss(grid, "|", a, b),
-        minimum_heat_loss(grid, "-", a, b)
-    )
+    return lowest_loss
 
 grid = parse("input")
 
-print("Part 1:", steps(grid, 1, 3))
-print("Part 2:", steps(grid, 4, 10))
+print("Part 1:", minimum_heat_loss(grid, 1, 3))
+print("Part 2:", minimum_heat_loss(grid, 4, 10))
