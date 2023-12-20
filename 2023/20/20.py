@@ -100,4 +100,4 @@ for i in range(5000):
 two = math.lcm(*cycles.values())
 
 print("Part 1:", one)
-print("Part 1:", two)
+print("Part 2:", two)
