@@ -99,63 +99,29 @@ def formula(grid, start):
     x1, x2, x3 = [offset + step * i for i in [0, 1, 2]]
     y1, y2, y3 = [reachable_after(grid, start, x) for x in [x1, x2, x3]]
 
-    y4 = y2 - y1
-    x4 = x2 * x2 - x1 * x1
-    x5 = x2 - x1
+    """
+    Solve linear eq. system dy = ax² + bx + c
+    making sure to keep everything as ints.
 
-    y5 = y3 - y2
-    x6 = x3 * x3 - x2 * x2
-    x7 = x3 - x2
+    This is not general, but assumes that a, b, c all divide into d
+    """
+    a, d = reduce_fraction(
+        y3 - y2 - y2 + y1,
+        x3*x3 - x2*x2 - x2*x2 + x1*x1
+    )
 
-    y6 = y5 - y4
-    x8 = x6 - x4
+    b, _ = reduce_fraction(
+        (y2 - y1) * d - a * (x2 * x2 - x1 * x1),
+        d * (x2 - x1)
+    )
 
-    a, d = reduce_fraction(y6, x8)
-
-    v1 = y4 * d - x4 * a
-    v2 = d * x5
-
-    b, _ = reduce_fraction(v1, v2)
-
-    v3 = y1*d - a*x1*x1-x1*b
-
-    c, _ = reduce_fraction(v3, d)
+    c, _ = reduce_fraction(y1 * d - a * x1 * x1 - x1 * b, d)
 
     def f(x):
         return (x * x * a + x * b + c) // d
     return f
 
-
-
-"""
-def f(x):
-    ""
-    3 points obtained using:
-
-    l = width(grid) # 131
-    xs = [65, 65+l, 65+2*l]
-    ys = [ra(x) for x in xs]
-
-    Quadratic parameters from Wolfram Alpha given points:
-    (65, 3734)
-    (196, 33285)
-    (327, 92268)
-
-    for equation:
-
-    y = (ax^2 + bx + c) / d
-
-    ""
-    a = 14716
-    b = 30305
-    c = -65751
-    d = 17161
-
-    return (x * x * a + x * b + c) // d
-    """
-
 grid, start = parse("input")
-
 
 print("Part 1:", reachable_after(grid, start, 64))
 f = formula(grid, start)
