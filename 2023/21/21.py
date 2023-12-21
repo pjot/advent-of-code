@@ -1,3 +1,5 @@
+import math
+
 def parse(file):
     grid = set()
     start = (0, 0)
@@ -85,8 +87,49 @@ def reachable_after(grid, start, steps):
         return len(odd)
     return vs
 
+def reduce_fraction(a, b):
+    g = math.gcd(a, b)
+    return a // g, b // g
+
+def formula(grid, start):
+    x1, x2, y1, y2 = boundary(grid)
+    step = x2 - x1 + 1
+    offset = step // 2
+
+    x1, x2, x3 = [offset + step * i for i in [0, 1, 2]]
+    y1, y2, y3 = [reachable_after(grid, start, x) for x in [x1, x2, x3]]
+
+    y4 = y2 - y1
+    x4 = x2 * x2 - x1 * x1
+    x5 = x2 - x1
+
+    y5 = y3 - y2
+    x6 = x3 * x3 - x2 * x2
+    x7 = x3 - x2
+
+    y6 = y5 - y4
+    x8 = x6 - x4
+
+    a, d = reduce_fraction(y6, x8)
+
+    v1 = y4 * d - x4 * a
+    v2 = d * x5
+
+    b, _ = reduce_fraction(v1, v2)
+
+    v3 = y1*d - a*x1*x1-x1*b
+
+    c, _ = reduce_fraction(v3, d)
+
+    def f(x):
+        return (x * x * a + x * b + c) // d
+    return f
+
+
+
+"""
 def f(x):
-    """
+    ""
     3 points obtained using:
 
     l = width(grid) # 131
@@ -102,15 +145,18 @@ def f(x):
 
     y = (ax^2 + bx + c) / d
 
-    """
+    ""
     a = 14716
     b = 30305
     c = -65751
     d = 17161
 
     return (x * x * a + x * b + c) // d
+    """
 
 grid, start = parse("input")
 
+
 print("Part 1:", reachable_after(grid, start, 64))
+f = formula(grid, start)
 print("Part 2:", f(26501365))
