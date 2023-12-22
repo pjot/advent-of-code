@@ -10,11 +10,6 @@ def parse(file):
             bricks.append((a, b))
     return bricks
 
-def plane(x1, y1, x2, y2):
-    for x in range(x1, x2 + 1):
-        for y in range(y1, y2 + 1):
-            yield x, y
-
 def can_move(brick, heights):
     a, b = brick
     x1, y1, z1 = a
