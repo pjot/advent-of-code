@@ -54,6 +54,8 @@ def fall(bricks):
         if can_move(brick, heights):
             b = move(brick)
             moved += 1
+            while can_move(b, heights):
+                b = move(b)
         else:
             b = brick
 
