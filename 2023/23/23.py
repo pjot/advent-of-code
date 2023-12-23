@@ -102,15 +102,23 @@ def skip_neighbours(start, end, path):
             horizon = new_horizon
             steps += 1
 
+    for k, v in graph[end].items():
+        last = k
+        extra = v
+
+    for k, v in graph[start].items():
+        first = k
+        extra += v
+
     def graph_neighbours(p):
         return graph[p].items()
 
-    return graph_neighbours
+    return graph_neighbours, first, last, extra
 
 path, start, end = parse("input")
 
 one = downhill_neighbours(path)
-two = skip_neighbours(start, end, path)
+two, first, last, extra = skip_neighbours(start, end, path)
 
-print("Part 1:", longest_path(start, end, one))
-print("Part 2:", longest_path(start, end, two))
+print("Part 1:", extra + longest_path(first, last, one))
+print("Part 2:", extra + longest_path(first, last, two))
