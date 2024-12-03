@@ -16,23 +16,25 @@ def two(memory):
         "|"
         "(don't)\(\)"
     )
-    instructions = re.findall(pattern, memory)
 
-    enabled = True
     s = 0
-    for m, do, dont in instructions:
-        if do:
-            enabled = True
-        elif dont:
-            enabled = False
-        elif m and enabled:
-            a, b = [int(n) for n in m.split(",")]
-            s += a * b
+    enabled = True
+    for match in re.finditer(pattern, memory):
+        m = match[match.lastindex]
 
+        match m, enabled:
+            case "do", _:
+                enabled = True
+            case "don't", _:
+                enabled = False
+
+            case _, True:
+                a, b = [int(n) for n in m.split(",")]
+                s += a * b
     return s
 
 with open("input") as f:
     mem = f.read()
 
 print("Part 1:", one(mem))
-print("Part 1:", two(mem))
+print("Part 2:", two(mem))
