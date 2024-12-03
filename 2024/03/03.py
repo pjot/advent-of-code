@@ -1,14 +1,14 @@
 import re
 
-def one():
-    muls = re.findall("mul\((\d+,\d+)\)", mem)
+def one(memory):
+    muls = re.findall("mul\((\d+,\d+)\)", memory)
     s = 0
     for mul in muls:
         a, b = [int(n) for n in mul.split(",")]
         s += a * b
     return s
 
-def two():
+def two(memory):
     pattern = (
         "mul\((\d+,\d+)\)"
         "|"
@@ -16,7 +16,7 @@ def two():
         "|"
         "(don't)\(\)"
     )
-    instructions = re.findall(pattern, mem)
+    instructions = re.findall(pattern, memory)
 
     enabled = True
     s = 0
@@ -34,5 +34,5 @@ def two():
 with open("input") as f:
     mem = f.read()
 
-print("Part 1:", one())
-print("Part 1:", two())
+print("Part 1:", one(mem))
+print("Part 1:", two(mem))
