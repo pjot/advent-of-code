@@ -1,6 +1,8 @@
 left, right = [], []
 with open("input") as f:
     for line in f.readlines():
+        if not line.strip():
+            continue
         a, b = [int(n) for n in line.split()]
         left.append(a)
         right.append(b)

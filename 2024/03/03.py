@@ -1,6 +1,6 @@
 import re
 
-def one(memory):
+def one(memory: str) -> int:
     muls = re.findall("mul\((\d+,\d+)\)", memory)
     s = 0
     for mul in muls:
@@ -8,7 +8,7 @@ def one(memory):
         s += a * b
     return s
 
-def two(memory):
+def two(memory: str) -> int:
     pattern = (
         "mul\((\d+,\d+)\)"
         "|"
@@ -20,6 +20,8 @@ def two(memory):
     s = 0
     enabled = True
     for match in re.finditer(pattern, memory):
+        if not match.lastindex:
+            continue
         m = match[match.lastindex]
 
         match m, enabled:

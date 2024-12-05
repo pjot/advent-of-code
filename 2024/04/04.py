@@ -1,4 +1,6 @@
-def parse(file):
+Grid = dict[tuple[int, int], str]
+
+def parse(file: str) -> Grid:
     grid = {}
     with open(file) as f:
         for y, line in enumerate(f.readlines()):
@@ -6,7 +8,7 @@ def parse(file):
                 grid[x, y] = c
     return grid
 
-def xmas_count(grid, x, y):
+def xmas_count(grid: Grid, x: int, y: int) -> int:
     if grid[x, y] != "X":
         return 0
 
@@ -29,7 +31,7 @@ def xmas_count(grid, x, y):
     ]
     return words.count("MAS")
 
-def x_mas_count(grid, x, y):
+def x_mas_count(grid: Grid, x: int, y: int) -> int:
     if grid[x, y] != "A":
         return 0
 
@@ -38,7 +40,7 @@ def x_mas_count(grid, x, y):
         grid.get((x + 1, y + 1), "")
     ))
     two = "".join(sorted(
-        grid.get((x + 1, y - 1), "") + 
+        grid.get((x + 1, y - 1), "") +
         grid.get((x - 1, y + 1), "")
     ))
     if one == "MS" and two == "MS":

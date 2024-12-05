@@ -1,11 +1,15 @@
 import itertools
+import typing
 
-def parse(file):
+Report = list[int]
+
+def parse(file: str) -> typing.Iterator[Report]:
     with open(file) as f:
         for line in f.readlines():
-            yield [int(n) for n in line.split()]
+            if line.strip():
+                yield [int(n) for n in line.split()]
 
-def safe(report):
+def safe(report: Report) -> bool:
     reverse = report[0] == max(report)
     if report != sorted(report, reverse=reverse):
         return False
@@ -16,7 +20,7 @@ def safe(report):
 
     return True
 
-def safe_dampened(report):
+def safe_dampened(report: Report) -> bool:
     for p, _ in enumerate(report):
         smaller = report.copy()
         smaller.pop(p)
