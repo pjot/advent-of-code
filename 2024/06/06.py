@@ -1,89 +1,91 @@
+Point = tuple[int, int]
+Direction = str
+Guard = tuple[Point, Direction]
+Walls = set[Point]
 
-import time
-def parse(file):
+def parse(file: str) -> tuple[Walls, Guard]:
     walls = set()
-    ym, xm = 0, 0
-    guard = None
+    guard = ((0, 0), "<")
     with open(file) as f:
         for y, line in enumerate(f.readlines()):
-            ym = max(y, ym)
             for x, c in enumerate(line.strip()):
-                xm = max(x, xm)
                 if c == "#":
                     walls.add((x, y))
                 if c in "v<>^":
-                    guard = (x, y, c)
+                    guard = ((x, y), c)
 
-    return walls, (xm, ym), guard
+    return walls, guard
 
-def move(x, y, d):
+def move(p: Point, d: Direction) -> Point:
+    x, y = p
     if d == ">": return x + 1, y
     if d == "<": return x - 1, y
     if d == "v": return x, y + 1
     if d == "^": return x, y - 1
+    return p
 
-def rotate(d):
+def rotate(d: Direction) -> Direction:
     if d == ">": return "v"
     if d == "<": return "^"
     if d == "v": return "<"
     if d == "^": return ">"
+    return d
 
-def iterate(walls, guard, limit):
-    x, y, d = guard
-    max_x, max_y = limit
-    seen = set()
-    while True:
-        moved = move(x, y, d)
-
-        if moved in walls:
-            d = rotate(d)
-        else:
-            x, y = moved
-            if x > max_x or x < 0 or y > max_y or y < 0:
-                return seen
-            seen.add(moved)
-
-def loops(walls, guard, limit):
-    x, y, d = guard
-    max_x, max_y = limit
-    seen = set()
-    while True:
-        moved = move(x, y, d)
-
-        if moved in walls:
-            d = rotate(d)
-        else:
-            x, y = moved
-            if x > max_x or x < 0 or y > max_y or y < 0:
-                return False
-
-        if (x, y, d) in seen:
-            return True
-        
-        seen.add((x, y, d))
-
-def limits(walls):
-    ymi = xmi = 1000000
-    yma = xma = 0
+def limits(walls: Walls) -> Point:
+    xl, yl = 0, 0
     for x, y in walls:
-        ymi = min(ymi, y)
-        xmi = min(xmi, x)
-        yma = max(yma, y)
-        xma = max(xma, x)
+        xl = max(x, xl)
+        yl = max(y, yl)
+    return xl, yl
 
-    return ymi, yma, xmi, xma
+def within_bounds(p: Point, bounds: Point) -> bool:
+    x, y = p
+    max_x, max_y = bounds
+    inside_x = 0 <= x <= max_x
+    inside_y = 0 <= y <= max_y
+    return inside_x and inside_y
 
+def tick(walls: Walls, p: Point, d: Direction) -> tuple[Point, Direction]:
+    moved = move(p, d)
+    if moved in walls:
+        return p, rotate(d)
+    else:
+        return moved, d
 
-walls, limit, guard = parse("input")
+def iterate(walls: Walls, guard: Guard) -> set[Point]:
+    p, d = guard
+    bounds = limits(walls)
+    seen = {p}
+    while True:
+        p, d = tick(walls, p, d)
 
-print("Part 1:", len(iterate(walls, guard, limit)))
+        if not within_bounds(p, bounds):
+            return seen
 
-ymi, yma, xmi, xma = limits(walls)
+        seen.add(p)
+
+def loops(walls: Walls, guard: Guard) -> bool:
+    p, d = guard
+    bounds = limits(walls)
+    seen = {guard}
+    while True:
+        p, d = tick(walls, p, d)
+
+        if not within_bounds(p, bounds):
+            return False
+
+        if (p, d) in seen:
+            return True
+
+        seen.add((p, d))
+
+walls, guard = parse("input")
+
+seen = iterate(walls, guard)
+print("Part 1:", len(seen))
+
 two = 0
-for y in range(ymi, yma+1):
-    for x in range(xmi, xma+1):
-        added_wall = {(x, y)}
-        if loops(walls | added_wall, guard, limit):
-            two += 1
-
+for p in seen:
+    if loops(walls | {p}, guard):
+        two += 1
 print("Part 2:", two)
