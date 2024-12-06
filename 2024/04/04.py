@@ -35,16 +35,19 @@ def x_mas_count(grid: Grid, x: int, y: int) -> int:
     if grid[x, y] != "A":
         return 0
 
-    one = "".join(sorted(
-        grid.get((x - 1, y - 1), "") +
-        grid.get((x + 1, y + 1), "")
-    ))
-    two = "".join(sorted(
-        grid.get((x + 1, y - 1), "") +
-        grid.get((x - 1, y + 1), "")
-    ))
-    if one == "MS" and two == "MS":
+    one = {
+        grid.get((x - 1, y - 1), ""),
+        grid.get((x + 1, y + 1), ""),
+    }
+    two = {
+        grid.get((x + 1, y - 1), ""),
+        grid.get((x - 1, y + 1), ""),
+    }
+    correct = {"M", "S"}
+
+    if one == correct and two == correct:
         return 1
+
     return 0
 
 grid = parse("input")
