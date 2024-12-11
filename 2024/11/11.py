@@ -1,11 +1,12 @@
 from functools import cache
 
-with open("input") as f:
-    line = f.readlines()[0].strip()
-    stones = tuple(int(n) for n in line.split())
+def parse(file: str) -> list[int]:
+    with open(file) as f:
+        line = f.readlines()[0].strip()
+        return [int(n) for n in line.split()]
 
 @cache
-def iterate(stone):
+def iterate(stone: int) -> list[int]:
     if stone == 0:
         return [1]
 
@@ -17,19 +18,15 @@ def iterate(stone):
     return [stone * 2024]
 
 @cache
-def blink(stone, blinks):
+def blink(stone: int, blinks: int) -> int:
     if blinks == 1:
         return len(iterate(stone))
-    ss = 0
-    for s in iterate(stone):
-        ss += blink(s, blinks - 1)
-    return ss
 
-def solve(stones, blinks):
-    s = 0
-    for stone in stones:
-        s += blink(stone, blinks)
-    return s
+    return sum(blink(s, blinks - 1) for s in iterate(stone))
 
+def solve(stones: list[int], blinks: int) -> int:
+    return sum(blink(stone, blinks) for stone in stones)
+
+stones = parse("input")
 print("Part 1:", solve(stones, 25))
 print("Part 2:", solve(stones, 75))
