@@ -1,3 +1,5 @@
+from functools import cache
+
 codes = []
 with open("input") as f:
     for line in f.readlines():
@@ -5,100 +7,234 @@ with open("input") as f:
         if line:
             codes.append(line)
 
-numeric_keypad = {
-    "7": (0, 0), "8": (1, 0), "9": (2, 0),
-    "4": (0, 1), "5": (1, 1), "6": (2, 1),
-    "1": (0, 2), "2": (1, 2), "3": (2, 2),
-                 "0": (1, 3), "A": (2, 3),
+MOVES: dict[tuple[str, str], list[str]] = {
+    # ^
+    ("^", "A"): [">"],
+    ("^", "<"): ["v<"],
+    ("^", "v"): ["v"],
+    ("^", ">"): ["v>", ">v"],
+    # A
+    ("A", "^"): ["<"],
+    ("A", "<"): ["v<<"],
+    ("A", "v"): ["v<", "<v"],
+    ("A", ">"): ["v"],
+    # <
+    ("<", "^"): [">^"],
+    ("<", "A"): [">>^"],
+    ("<", "v"): [">"],
+    ("<", ">"): [">>"],
+    # v
+    ("v", "^"): ["^"],
+    ("v", "A"): ["^>", ">^"],
+    ("v", "<"): ["<"],
+    ("v", ">"): [">"],
+    # >
+    (">", "^"): ["^<", "<^"],
+    (">", "A"): ["^"],
+    (">", "<"): ["<<"],
+    (">", "v"): ["<"],
+
+    # 7
+    ("7", "8"): [">"],
+    ("7", "9"): [">>"],
+
+    ("7", "4"): ["v"],
+    ("7", "5"): [">v", "v>"],
+    ("7", "6"): [">>v", "v>>"],
+
+    ("7", "1"): ["vv"],
+    ("7", "2"): [">vv", "vv>"],
+    ("7", "3"): [">>vv", "vv>>"],
+
+    ("7", "0"): [">vvv"],
+    ("7", "A"): [">>vvv"],
+    # 8
+    ("8", "7"): ["<"],
+    ("8", "9"): [">"],
+
+    ("8", "4"): ["v<", "<v"],
+    ("8", "5"): ["v"],
+    ("8", "6"): [">v", "v>"],
+
+    ("8", "1"): ["vv<", "<vv"],
+    ("8", "2"): ["vv"],
+    ("8", "3"): [">vv", "vv>"],
+
+    ("8", "0"): ["vvv"],
+    ("8", "A"): [">vvv", "vvv>"],
+    # 9
+    ("9", "7"): ["<<"],
+    ("9", "8"): ["<"],
+
+    ("9", "4"): ["v<<", "<<v"],
+    ("9", "5"): ["v<", "<v"],
+    ("9", "6"): ["v"],
+
+    ("9", "1"): ["vv<<", "<<vv"],
+    ("9", "2"): ["vv<", "<vv"],
+    ("9", "3"): ["vv"],
+
+    ("9", "0"): ["vvv<", "<vvv"],
+    ("9", "A"): ["vvv"],
+    # 4
+    ("4", "7"): ["^"],
+    ("4", "8"): ["^>", ">^"],
+    ("4", "9"): ["^>>", ">>^"],
+
+    ("4", "5"): [">"],
+    ("4", "6"): [">>"],
+
+    ("4", "1"): ["v"],
+    ("4", "2"): [">v", "v>"],
+    ("4", "3"): [">>v", "v>>"],
+
+    ("4", "0"): [">vv"],
+    ("4", "A"): [">>vv"],
+    # 5
+    ("5", "7"): ["^<", "<^"],
+    ("5", "8"): ["^"],
+    ("5", "9"): ["^>", ">^"],
+
+    ("5", "4"): ["<"],
+    ("5", "6"): [">"],
+
+    ("5", "1"): ["v<", "<v"],
+    ("5", "2"): ["v"],
+    ("5", "3"): [">v", "v>"],
+
+    ("5", "0"): ["vv"],
+    ("5", "A"): [">vv", "vv>"],
+    # 6
+    ("6", "7"): ["^<<", "<<^"],
+    ("6", "8"): ["^<", "<^"],
+    ("6", "9"): ["^"],
+
+    ("6", "4"): ["<<"],
+    ("6", "5"): ["<"],
+
+    ("6", "1"): ["v<<", "<<v"],
+    ("6", "2"): ["v<", "<v"],
+    ("6", "3"): ["v"],
+
+    ("6", "0"): ["vv<", "<vv"],
+    ("6", "A"): ["vv"],
+    # 1
+    ("1", "7"): ["^^"],
+    ("1", "8"): ["^^>", ">^^"],
+    ("1", "9"): ["^^>>", ">>^^"],
+
+    ("1", "4"): ["^"],
+    ("1", "5"): ["^>", ">^"],
+    ("1", "6"): ["^>>",">>^"],
+
+    ("1", "2"): [">"],
+    ("1", "3"): [">>"],
+
+    ("1", "0"): [">v"],
+    ("1", "A"): [">>v"],
+    # 2
+    ("2", "7"): ["^^<", "<^^"],
+    ("2", "8"): ["^^"],
+    ("2", "9"): ["^^>", ">^^"],
+
+    ("2", "4"): ["^<", "<^"],
+    ("2", "5"): ["^"],
+    ("2", "6"): ["^>",">^"],
+
+    ("2", "1"): ["<"],
+    ("2", "3"): [">"],
+
+    ("2", "0"): ["v"],
+    ("2", "A"): [">v", "v>"],
+    # 3
+    ("3", "7"): ["^^<<", "<<^^"],
+    ("3", "8"): ["^^<", "<^^"],
+    ("3", "9"): ["^^"],
+
+    ("3", "4"): ["^<<", "<<^"],
+    ("3", "5"): ["^<", "<^"],
+    ("3", "6"): ["^"],
+
+    ("3", "1"): ["<<"],
+    ("3", "2"): ["<"],
+
+    ("3", "0"): ["v<", "<v"],
+    ("3", "A"): ["v"],
+    # 0
+    ("0", "7"): ["^^^<"],
+    ("0", "8"): ["^^^"],
+    ("0", "9"): ["^^^>", ">^^^"],
+
+    ("0", "4"): ["^^<"],
+    ("0", "5"): ["^^"],
+    ("0", "6"): ["^^>", ">^^"],
+
+    ("0", "1"): ["^<"],
+    ("0", "2"): ["^"],
+    ("0", "3"): ["^>", ">^"],
+
+    ("0", "A"): [">"],
+    # A
+    ("A", "7"): ["^^^<<"],
+    ("A", "8"): ["^^^<", "<^^^"],
+    ("A", "9"): ["^^^"],
+
+    ("A", "4"): ["^^<<"],
+    ("A", "5"): ["^^<", "<^^"],
+    ("A", "6"): ["^^"],
+
+    ("A", "1"): ["^<<"],
+    ("A", "2"): ["^<", "<^"],
+    ("A", "3"): ["^"],
+
+    ("A", "0"): ["<"],
 }
 
-directional_keypad = {
-                 "^": (1, 0), "A": (2, 0),
-    "<": (0, 1), "v": (1, 1), ">": (2, 1),
-}
-
-def travel(a, b, keypad):
-    ax, ay = keypad[a]
-    bx, by = keypad[b]
-
-    dx = bx - ax
-    dy = by - ay
-
-    return dx, dy
-
-def direction_travel(dx, dy):
-    moves = ""
-    if dx < 0:
-        moves += "<" * abs(dx)
-    if dy > 0:
-        moves += "v" * dy
-    if dx > 0:
-        moves += ">" * dx
-    if dy < 0:
-        moves += "^" * abs(dy)
-    return moves
-
-def move(x, y, d):
-    if d == "<":
-        return x - 1, y
-    if d == ">":
-        return x + 1, y
-    if d == "^":
-        return x, y - 1
-    if d == "v":
-        return x, y + 1
-
-def moves_to_moves(moves):
-    code = moves
-    curr = "A"
-    all_moves = ""
-    for c in code:
-        de = travel(curr, c, directional_keypad)
-        if curr == "<" and c == "^":
-            m = ">^"
-        elif curr == "^" and c == "<":
-            m = "v<"
-        else:
-            m = direction_travel(*de)
-        all_moves += m + "A"
-        curr = c
-    return all_moves
-
-def code_to_moves(code):
-    curr = "A"
-    all_moves = ""
-    for c in code:
-        de = travel(curr, c, numeric_keypad)
-        if curr in "0A" and c in "147":
-            dx, dy = de
-            moves = abs(dy) * "^" + abs(dx) * "<"
-        elif curr in "147" and c in "0A":
-            dx, dy = de
-            moves = abs(dx) * ">" + abs(dy) * "v"
-        else:
-            moves = direction_travel(*de)
-        all_moves += moves + "A"
-        curr = c
-    return all_moves
-
-def numbers(code):
+def numbers(code: str) -> int:
     n = ""
     for c in code:
         if c in "1234567890":
             n += c
     return int(n)
 
-def resolve(code):
-    numeric = numbers(code)
 
-    moves = code_to_moves(code)
-    moves = moves_to_moves(moves)
-    moves = moves_to_moves(moves)
-    return len(moves), numeric
+@cache
+def shortest(code: str, iterations: int) -> int:
+    result = 0
+    for part in expand(code):
+        options = []
+        for c in part:
+            if iterations == 0:
+                v = len(c)
+            else:
+                v = shortest(c, iterations - 1)
 
-s = 0
+            options.append(v)
+
+        result += min(options)
+
+    return result
+
+def moves(a: str, b: str) -> list[str]:
+    if a == b:
+        return ["A"]
+    else:
+        return [m + "A" for m in MOVES[a, b]]
+
+@cache
+def expand(code: str) -> list[list[str]]:
+    parts = []
+    previous = "A"
+    for c in code:
+        parts.append(moves(previous, c))
+        previous = c
+    return parts
+
+one = two = 0
 for code in codes:
-    a, b = resolve(code)
-    s += a * b
+    n = numbers(code)
+    one += n * shortest(code, 2)
+    two += n * shortest(code, 25)
 
-print("Part 1:", s)
+print("Part 1:", one)
+print("Part 2:", two)
