@@ -22,4 +22,3 @@ for c in nx.enumerate_all_cliques(graph):
 
 print("Part 1:", one)
 print("Part 2:", two)
-
