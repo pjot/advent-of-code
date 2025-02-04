@@ -1,5 +1,22 @@
 import itertools
 from collections import defaultdict
+from dataclasses import dataclass
+
+@dataclass
+class Gate:
+    a: str
+    b: str
+    operation: str
+    target: str
+
+    def operate(self, a, b):
+        if self.operation == "OR":
+            return a or b
+        if self.operation == "XOR":
+            return a ^ b
+        if self.operation == "AND":
+            return a and b
+
 
 wires = {}
 gates = {}
@@ -10,7 +27,7 @@ with open("input") as f:
     for line in g.splitlines():
         a, operation, b, _, wire = line.strip().split()
 
-        gates[wire] = (a, operation, b)
+        gates[wire] = Gate(a, b, operation, wire)
         wires[a] = None
         wires[b] = None
         wires[wire] = None
@@ -19,25 +36,8 @@ with open("input") as f:
         wire, value = line.strip().split(": ")
         wires[wire] = value == "1"
 
-def operate(a, b, operation):
-    if operation == "OR":
-        return a or b
-    if operation == "XOR":
-        return a ^ b
-    if operation == "AND":
-        return a and b
 
 def solve(wires, gates):
-    def evaluate(wire):
-        a, op, b = gates[wire]
-
-        if wires.get(a) is None:
-            wires[a] = evaluate(a)
-        if wires.get(b) is None:
-            wires[b] = evaluate(b)
-
-        wires[wire] = operate(wires[a], wires[b], op)
-
     def number(v):
         my_wires = [w for w in wires.keys() if w.startswith(v)]
         word = ""
@@ -51,9 +51,10 @@ def solve(wires, gates):
     while none_wires:
         done = set()
         for wire in none_wires:
-            a, op, b = gates[wire]
-            if wires[a] is not None and wires[b] is not None:
-                wires[wire] = operate(wires[a], wires[b], op)
+            g = gates[wire]
+            a, b = wires.get(g.a), wires.get(g.b)
+            if a is not None and b is not None:
+                wires[wire] = g.operate(a, b)
                 done.add(wire)
 
         none_wires -= done
@@ -64,63 +65,38 @@ def solve(wires, gates):
 
 def two():
     bad = [
-        w for w, g in gates.items()
-        if w.startswith("z") and g[1] != "XOR" and w != "z45"
+        w.target for w in gates.values()
+        if w.target.startswith("z") and w.operation != "XOR" and w.target != "z45"
     ]
 
-    xor_not_xyz = [
-        w for w, g in gates.items()
-        if g[1] == "XOR" and w[0] not in "xyz"
-    ]
+    for w in gates.values():
+        if w.target in bad:
+            continue
+        if not w.target.startswith("z"):
+            continue
+        if w.target == "z00":
+            continue
 
+        gate_a = gates[w.a]
+        gate_b = gates[w.b]
 
+        for gate in [gate_a, gate_b]:
+            if gate.operation == "XOR" and gate.a[0] not in "xy":
+                bad.append(gate.target)
 
-    gat = sorted(gates.items())
-    for g, v in gat:
-        if g.startswith("z") and g not in bad and g != "z00":
-            def f(va, ga):
-                a, b, c = ga
-                return f"({a} {b} {c} - {va})"
+            if gate.operation == "OR":
+                for sub_gate in [gates[gate.a], gates[gate.b]]:
+                    if sub_gate.operation != "AND":
+                        bad.append(sub_gate.target)
 
-            a, b = v[0], v[2]
-            ga = gates.get(a)
-            gb = gates.get(b)
-            gg = [f(a, gates.get(a)), f(b, gates.get(b))]
-            gg = list(sorted(gg))
-            subgr = ""
-            if ga[1] == "XOR" and ga[0][0] not in "xy":
-                bad.append(a)
-            if gb[1] == "XOR" and gb[0][0] not in "xy":
-                bad.append(b)
+            if gate.operation == "AND" and gate.a[0] in "xy":
+                if gate.a not in {"x00", "x44", "y00", "y44"}:
+                    bad.append(gate.target)
 
-            for i in [0, 2]:
-                wir = v[i]
-                gatt = gates[wir]
-                if gatt[1] == "AND" and gatt[0][0] in "xy" and gatt[0] not in {"x00", "y00"}:
-                    if gatt[0] in {"x44", "y44"}:
-                        continue
-                    #print(gatt)
-                    bad.append(wir)
-                    #print("bad", wir, gatt)
-            for gr in [ga, gb]:
-                if gr[1] == "OR":
-                    for i in [0, 2]:
-                        wir = gr[i]
-                        gatt = gates[wir]
-                        if gatt[1] != "AND":
-                            bad.append(wir)
-                            #print("bad", wir, gatt)
-
-                    ww = [
-                        f(gr[0], gates.get(gr[0])),
-                        f(gr[2], gates.get(gr[2])),
-                    ]
-                    ww.sort()
-                    subgr += "|" + " - ".join(ww) + "|"
-            #print(g, gg[0], v[1], gg[1], subgr)
 
     return ",".join((sorted(bad)))
 
 x, y, z = solve(wires, gates)
 print("Part 1:", z)
 print("Part 2:", two())
+
