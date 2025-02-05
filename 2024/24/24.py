@@ -1,5 +1,6 @@
 import itertools
 from dataclasses import dataclass
+import typing
 
 @dataclass
 class Gate:
@@ -8,7 +9,7 @@ class Gate:
     operation: str
     target: str
 
-    def operate(self, a, b):
+    def operate(self, a: bool, b: bool):
         if self.operation == "OR":
             return a or b
         if self.operation == "XOR":
@@ -16,29 +17,34 @@ class Gate:
         if self.operation == "AND":
             return a and b
 
-    def parents(self, gates):
+    def parents(self, gates: "Gates"):
         return [gates[self.a], gates[self.b]]
 
-values = {}
-gates = {}
+Values = dict[str, typing.Optional[bool]]
+Gates = dict[str, Gate]
 
-with open("input") as f:
-    w, g = f.read().split("\n\n")
+def parse(file: str) -> tuple[Values, Gates]:
+    values: Values = {}
+    gates = {}
 
-    for line in g.splitlines():
-        a, operation, b, _, wire = line.strip().split()
+    with open(file) as f:
+        w, g = f.read().split("\n\n")
 
-        gates[wire] = Gate(a, b, operation, wire)
-        values[a] = None
-        values[b] = None
-        values[wire] = None
+        for line in g.splitlines():
+            a, operation, b, _, wire = line.strip().split()
 
-    for line in w.splitlines():
-        wire, value = line.strip().split(": ")
-        values[wire] = value == "1"
+            gates[wire] = Gate(a, b, operation, wire)
+            values[a] = None
+            values[b] = None
+            values[wire] = None
 
-def solve(values, gates):
-    def number(v):
+        for line in w.splitlines():
+            wire, value = line.strip().split(": ")
+            values[wire] = value == "1"
+    return values, gates
+
+def one(values: Values, gates: Gates) -> int:
+    def number(v: str) -> int:
         my_values = [w for w in values.keys() if w.startswith(v)]
         word = ""
         for wire in sorted(my_values):
@@ -61,9 +67,9 @@ def solve(values, gates):
 
         none_values -= done
 
-    return number("x"), number("y"), number("z")
+    return number("z")
 
-def two():
+def two(gates: Gates) -> str:
     bad = [
         w.target for w in gates.values()
         if w.target.startswith("z") and w.operation != "XOR" and w.target != "z45"
@@ -93,7 +99,7 @@ def two():
 
     return ",".join((sorted(bad)))
 
-x, y, z = solve(values, gates)
-print("Part 1:", z)
-print("Part 2:", two())
+values, gates = parse("input")
+print("Part 1:", one(values, gates))
+print("Part 2:", two(gates))
 
